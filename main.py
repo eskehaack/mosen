@@ -1,12 +1,11 @@
 import dash
 from dash import dcc, html
-from src.settings_layout import layout_func
+from src.main_layout import layout_func
 import dash_bootstrap_components as dbc
+from app import app
 
-# Create the Dash app
-app = dash.Dash("Moskemaskinen", external_stylesheets=[dbc.themes.COSMO])
-# Define the layout of the app
 app.layout = layout_func
+# app.layout=html.H1("test")
 
 # Run the app
 if __name__ == '__main__':
