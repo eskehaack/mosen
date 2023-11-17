@@ -1,4 +1,5 @@
 from dash import dcc, html, callback, Input, Output
+import plotly.express as px
 import dash_bootstrap_components as dbc
 from dash import dash_table
 from src.tables.user_table import get_users
@@ -6,6 +7,7 @@ from src.tables.prod_table import get_prods, get_waste
 from src.tables.trans_table import get_trans, get_revenue, get_income
 from src.modals import new_user_modal, new_prod_modal, update_stock_modal
 from src.trans_layout import trans_modal
+from src.main_page_callbacks import create_overview
 from app import app
 
 def user_settings_layout():
@@ -120,17 +122,34 @@ def layout_func():
     
     layout = dbc.Container(
         [
-            html.Div([
-                    html.H1(app.title),
-                    dbc.Button("Settings", id="open_settings")   
-                ]
-            ),
             html.Div(
-                dbc.Input(
-                    id="new_trans_inp",
-                    autoFocus=True
-                ),
-                style={"display":"block"}
+                [
+                    dbc.Col(
+                        [
+                            dbc.Row(html.Br()),
+                            dbc.Row(
+                                [
+                                    dbc.Col(html.H1(app.title), width=11),
+                                    dbc.Col(dbc.Button(html.I(className="bi bi-sliders"), id="open_settings"), width=1),
+                                ],
+                            ),
+                            dbc.Row(
+                                dbc.Input(
+                                    id="new_trans_inp",
+                                    autoFocus=True
+                                ),
+                            )
+                        ],
+                        width=12
+                    ),
+                    html.Div(
+                        [
+                            dbc.Col(
+                                children=dcc.Graph(figure=create_overview('team'), id="overview_graph"),
+                            )
+                        ]
+                    ),
+                ]
             ),
             settings_modal,
             trans_modal(),
