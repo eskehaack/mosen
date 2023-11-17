@@ -43,17 +43,18 @@ def enable_confirm(inps):
 @callback(
     Output('prod_table', 'data'),
     Input('confirm_prod', 'n_clicks'),
-    State('prod_table', 'data'),
+    Input("confirm_new_stock", "n_clicks"),
     State({"type": "prod_input", "index": ALL}, "value"),
     State({"type": "prod_input", "index": ALL}, "id"),
     prevent_initial_call=True
 )
-def add_row(n_clicks, data, vals, ids):
+def add_row(n_clicks, stock_trigger, vals, ids):
+    data = get_prods().to_dict(orient="records")
     try:
         columns = data[0]
     except:
         columns = [inp['index'].split("_")[1] for inp in ids]
-    if n_clicks > 0:
+    if n_clicks is not None and n_clicks > 0:
         data.append({c: vals[i] for i, c in enumerate(columns)})
     pd.DataFrame(data).to_csv("data/prods.csv",index=False)
     return data
