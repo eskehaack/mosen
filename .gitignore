@@ -149,4 +149,4 @@ dmypy.json
 cython_debug/
 
 .pyc
-/__pycache__
+*/__pycache__
