@@ -19,8 +19,6 @@ def create_overview(plot_col):
     
     for i, row in transactions.iterrows():
         overview_df[ranks.index(concatinated_dict[row['user']])][row['product']] += 1
-    
-    print(overview_df)
     return px.bar(overview_df, x = ranks, y = list(prods['name']))
 
 @callback(
