@@ -62,7 +62,8 @@ def product_settings_layout():
             align="center"
         ),
         new_prod_modal(),
-        update_stock_modal()
+        update_stock_modal(),
+        dcc.Store(id="waste_value", data=0),
     ])
     return layout
 

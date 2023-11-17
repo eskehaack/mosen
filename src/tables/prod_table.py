@@ -1,5 +1,6 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL, MATCH, no_update
+from src.tables.user_table import get_users
 
 def get_prods():
     return pd.read_csv("data/prods.csv")
@@ -74,6 +75,7 @@ def validate_barcode_user(value, data):
 
 @callback(
     Output("new_stock_modal", "is_open"),
+    Output("waste_value", "data"),
     Input("open_update_stock", "n_clicks"),
     Input("confirm_new_stock", "n_clicks"),
     State({"type": "new_stock_inp", "index": ALL}, "value")
@@ -81,11 +83,14 @@ def validate_barcode_user(value, data):
 def open_stock(trigger_open, trigger_close, inps):
     trigger = ctx.triggered_id
     if trigger == "open_update_stock":
-        return True
+        return True, no_update
     if trigger == "confirm_new_stock":
         prods = pd.read_csv("data/prods.csv")
         prods['current stock'] = list(inps)
         prods['waste'] = [((p['initial stock'] - p['current stock']) - p['sold']) * p['price'] for _, p in prods.iterrows()]
         prods.to_csv("data/prods.csv", index=False)
-        return False
-    return no_update
+        
+        n_users = len(get_users())
+        general_waste = sum(prods["waste"]) / n_users
+        return False, general_waste
+    return no_update, no_update

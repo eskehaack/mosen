@@ -114,7 +114,12 @@ def update_stock_modal():
             dbc.ModalHeader("Update product stock"),
             dbc.ModalBody(new_stock_inps),
             dbc.ModalFooter(
-                dbc.Button("Confirm", id="confirm_new_stock")
+                dbc.Row(
+                    [
+                        dbc.Col(html.P("Updating stock will apply possible waste to all users.")),
+                        dbc.Col(dbc.Button("Confirm", id="confirm_new_stock"))
+                    ] 
+                )
             )
         ],
         size="lg",
