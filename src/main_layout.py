@@ -145,7 +145,7 @@ def layout_func():
                     html.Div(
                         [
                             dbc.Col(
-                                children=dcc.Graph(figure=create_overview('team'), id="overview_graph"),
+                                children=dcc.Graph(figure=create_overview('team'), id="overview_graph", config={"displayModeBar": False}),
                             )
                         ]
                     ),
