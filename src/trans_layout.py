@@ -8,7 +8,14 @@ def trans_modal():
     modal = dbc.Modal(
         [
             dbc.ModalHeader(
-                html.H1(id="new_trans_user")
+                dbc.Col(
+                    dbc.Row(
+                        [
+                            dbc.Col(html.H1(id="new_trans_user")),
+                        ]
+                    ),
+                    width=12,
+                )
             ),
             dbc.ModalBody(
                 dbc.Col(
@@ -47,7 +54,6 @@ def trans_modal():
     return modal
 
 @callback(
-    Output("new_trans_user","children"),
     Output("trans_graph", "figure"),
     Output("show_prods", "data"),
     Input("new_trans_inp", "n_submit"),
@@ -61,12 +67,11 @@ def get_transactions(trigger, barcode):
     user_barcodes = list(users['barcode'])
     if not (trigger is not None and int(barcode) in user_barcodes):
         return no_update
-    user = str(users[users["barcode"] == int(barcode)]['name'][0])
     user_trans = transactions[transactions['barcode_user'] == int(barcode)]
     trans_data = [{p: sum([1 if p==row["product"] else 0 for i, row in user_trans.iterrows()]) for p in list(prods['name'])}]
     
     
-    return user, px.bar(trans_data), trans_data
+    return px.bar(trans_data), trans_data
     
 @callback(
     Output("new_trans_modal", "is_open"),
@@ -150,3 +155,20 @@ def new_trans(trigger, barcode, current, user_barcode, display_text):
     prods.to_csv("data/prods.csv", index=False)
         
     return display_text, "", current
+
+@callback(
+    Output("new_trans_user", "children"),
+    Input("new_trans_inp", "n_submit"),
+    State("new_trans_inp", "value"),
+    State("waste_value", "data")
+)
+def show_balance(trigger, user_id, user_waste):
+    if trigger is not None:
+        trans = pd.read_csv("data/transactions.csv")
+        users = pd.read_csv("data/users.csv")
+        
+        user = str(users[users["barcode"] == int(user_id)]['name'][0])
+        user_balance = sum(trans[trans['barcode_user'] == int(user_id)]['price'])
+        return f"{user} - Current bill is: {user_balance + user_waste} DKK"
+    return no_update
+    
