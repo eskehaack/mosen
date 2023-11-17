@@ -8,6 +8,7 @@ from src.tables.trans_table import get_trans, get_revenue, get_income
 from src.modals import new_user_modal, new_prod_modal, update_stock_modal
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
+from src.components import get_upload
 from app import app
 
 def user_settings_layout():
@@ -102,6 +103,70 @@ def transaction_settings_layout():
     ])
     return layout
 
+def settings_settings_layout():
+    layout = dbc.Container([
+        dbc.Row(
+            [
+                html.Br(),
+                dbc.Col(
+                  dbc.Row(
+                        [
+                            dbc.Col(html.H3("User Table Location: ")),
+                            html.Br(),
+                            dbc.Col(get_upload("user_file"))
+                        ]
+                    ),
+                    width=12
+                ),
+                html.Hr(),
+                dbc.Col(
+                  dbc.Row(
+                        [
+                            dbc.Col(html.H3("Transaction Table Location: ")),
+                            html.Br(),
+                            dbc.Col(get_upload("trans_file"))
+                        ]
+                    ),
+                    width=12
+                ),
+                html.Hr(),
+                dbc.Col(
+                  dbc.Row(
+                        [
+                            dbc.Col(html.H3("Product Table Location: ")),
+                            html.Br(),
+                            dbc.Col(get_upload("prod_file"))
+                        ]
+                    ),
+                    width=12
+                ),
+                html.Hr(),
+                dbc.Col(
+                  dbc.Row(
+                        [
+                            dbc.Col(html.H3("Password: ")),
+                            html.Br(),
+                            dbc.Col(dbc.Input(placeholder="Password", id = "settings_password"))
+                        ]
+                    ),
+                    width=12
+                ),
+                html.Hr(),
+                dbc.Col(
+                  dbc.Row(
+                        [
+                            dbc.Col(html.H3("Display current bill: ")),
+                            html.Br(),
+                            dbc.Col(dbc.Switch(id="display_bill_switch", value=True))
+                        ]
+                    ),
+                    width=12
+                ),
+            ]
+        )
+    ])
+    return layout
+
 settings_modal = dbc.Modal([
             dbc.ModalHeader(html.H1("Settings")),
             
@@ -110,6 +175,7 @@ settings_modal = dbc.Modal([
                     dcc.Tab(label='Users', value='users', children=user_settings_layout(), id="user_settings"),
                     dcc.Tab(label='Products', value='products', children=product_settings_layout(), id="product_settings"),
                     dcc.Tab(label='Economy', value='economy', children=transaction_settings_layout(), id="economy_settings"),
+                    dcc.Tab(label='Settings', value='settings', children=settings_settings_layout(), id='settings_settings'),
                 ]),
             )
 
