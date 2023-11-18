@@ -160,7 +160,7 @@ def settings_settings_layout(password, trans_path, users_path, prods_path, show_
                         [
                             dbc.Col(html.H3("Password: ")),
                             html.Br(),
-                            dbc.Col(dbc.Input(placeholder=password, id = "settings_password"))
+                            dbc.Col(dbc.Input(placeholder=password, id = "settings_password", type="text", minLength=1))
                         ]
                     ),
                     width=12
