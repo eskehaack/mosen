@@ -23,6 +23,15 @@ def get_paths():
         data = list(cur.execute("SELECT prods_table, trans_table, users_table FROM settings"))
     return data[0]
 
+def get_show_bill():
+    con, cur = init()
+    data = list(cur.execute("SELECT show_bill FROM settings"))
+    if len(data) == 0:
+        cur.execute("INSERT INTO show_bill VALUES (TRUE)")
+        con.commit()
+        data = list(cur.execute("SELECT show_bill FROM settings"))
+    return bool(data[0])
+
 def update_values(password, prod_file, trans_file, user_file):
     con, cur = init()
     inputs = [password, prod_file, trans_file, user_file]
