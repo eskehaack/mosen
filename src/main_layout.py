@@ -1,4 +1,4 @@
-from dash import dcc, html, callback, Input, Output
+from dash import dcc, html, callback, Input, Output, State, ctx, no_update
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from dash import dash_table
@@ -6,7 +6,7 @@ import os
 from src.tables.user_table import get_users
 from src.tables.prod_table import get_prods, get_waste
 from src.tables.trans_table import get_trans, get_revenue, get_income
-from src.modals import new_user_modal, new_prod_modal, update_stock_modal
+from src.modals import new_user_modal, new_prod_modal, update_stock_modal, password_modal
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
 from src.components import get_upload
@@ -247,6 +247,7 @@ def layout_func():
             ),
             settings_mode_func(),
             trans_modal(),
+            password_modal(),
             dcc.Store(id="update_settings")
         ]
     )
@@ -254,13 +255,32 @@ def layout_func():
     return layout
 
 @callback(
-    Output("settings_modal", "is_open"),
-    Input("open_settings", "n_clicks")
+    Output("password_modal", "is_open"),
+    Input("open_settings", "n_clicks"),
+    Input("confirm_password", "n_clicks"),
+    State("password_input", "value")
 )
-def open_settings(trigger):
-    if trigger is not None and trigger > 0:
+def open_settings(trigger_open, trigger_close, password):
+    trigger = ctx.triggered_id
+    if trigger is not None and trigger == "open_settings":
         return True
-    return False
+    elif trigger is not None and trigger == "confirm_password":
+        print(password, PASSWORD)
+        if password == PASSWORD:
+            return False
+    return no_update
+
+@callback(
+    Output("settings_modal", "is_open"),
+    Output("password_input", "value"),
+    Input("confirm_password", "n_clicks"),
+    State("password_input", "value")
+)
+def open_settings(trigger, password):
+    if trigger is not None and trigger > 0:
+        if password == PASSWORD:
+            return True, ""
+    return False, no_update
 
 @callback(
     Output("user_settings", "children"),

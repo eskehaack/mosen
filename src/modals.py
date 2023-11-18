@@ -126,3 +126,21 @@ def update_stock_modal():
         id="new_stock_modal"
     )
     return mdl
+
+def password_modal():
+    mdl = dbc.Modal(
+        [
+            dbc.ModalHeader("Input Password"),
+            dbc.ModalBody(dbc.Input(placeholder = "Password", type="password", id="password_input")),
+            dbc.ModalFooter(
+                dbc.Row(
+                    [
+                        dbc.Col(dbc.Button("Confirm", id="confirm_password"))
+                    ] 
+                )
+            )
+        ],
+        size="md",
+        id="password_modal"
+    )
+    return mdl

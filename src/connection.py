@@ -9,7 +9,7 @@ def get_password():
     con, cur = init()
     data = list(cur.execute("SELECT password FROM settings"))
     if len(data) == 0:
-        cur.execute("INSERT INTO settings VALUES ('OLProgram', '.\\data\\prods.csv', '.\\data\\transactions.csv', '.\\data\\users.csv')")
+        cur.execute("INSERT INTO settings VALUES ('OLProgram', '.\\data\\prods.csv', '.\\data\\transactions.csv', '.\\data\\users.csv', TRUE)")
         con.commit()
         data = list(cur.execute("SELECT password FROM settings"))
     return data[0][0]
@@ -18,7 +18,7 @@ def get_paths():
     con, cur = init()
     data = list(cur.execute("SELECT prods_table, trans_table, users_table FROM settings"))
     if len(data) == 0:
-        cur.execute("INSERT INTO settings VALUES ('OLProgram', '.\\data\\prods.csv', '.\\data\\transactions.csv', '.\\data\\users.csv')")
+        cur.execute("INSERT INTO settings VALUES ('OLProgram', '.\\data\\prods.csv', '.\\data\\transactions.csv', '.\\data\\users.csv', TRUE)")
         con.commit()
         data = list(cur.execute("SELECT prods_table, trans_table, users_table FROM settings"))
     return data[0]
@@ -27,7 +27,7 @@ def get_show_bill():
     con, cur = init()
     data = list(cur.execute("SELECT show_bill FROM settings"))
     if len(data) == 0:
-        cur.execute("INSERT INTO show_bill VALUES (TRUE)")
+        cur.execute("INSERT INTO settings VALUES ('OLProgram', '.\\data\\prods.csv', '.\\data\\transactions.csv', '.\\data\\users.csv', TRUE)")
         con.commit()
         data = list(cur.execute("SELECT show_bill FROM settings"))
     return bool(data[0])
