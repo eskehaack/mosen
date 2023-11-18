@@ -2,11 +2,11 @@ import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL, MATCH, no_update
 from src.tables.user_table import get_users
 
-def get_prods():
-    return pd.read_csv("data/prods.csv")
+def get_prods(path):
+    return pd.read_csv(path)
 
-def get_waste():
-    prods = get_prods()
+def get_waste(prods_path):
+    prods = get_prods(prods_path)
     waste = sum([(p['initial stock'] - p['current stock']) * p['price'] for _, p in prods.iterrows()])
     return waste
 
@@ -47,17 +47,18 @@ def enable_confirm(inps):
     Input("confirm_new_stock", "n_clicks"),
     State({"type": "prod_input", "index": ALL}, "value"),
     State({"type": "prod_input", "index": ALL}, "id"),
+    State("prods_file", "filename"),
     prevent_initial_call=True
 )
-def add_row(n_clicks, stock_trigger, vals, ids):
-    data = get_prods().to_dict(orient="records")
+def add_row(n_clicks, stock_trigger, vals, ids, prods_path):
+    data = get_prods(prods_path).to_dict(orient="records")
     try:
         columns = data[0]
     except:
         columns = [inp['index'].split("_")[1] for inp in ids]
     if n_clicks is not None and n_clicks > 0:
         data.append({c: vals[i] for i, c in enumerate(columns)})
-    pd.DataFrame(data).to_csv("data/prods.csv",index=False)
+    pd.DataFrame(data).to_csv(prods_path,index=False)
     return data
 
 
@@ -78,17 +79,18 @@ def validate_barcode_user(value, data):
     Output("waste_value", "data"),
     Input("open_update_stock", "n_clicks"),
     Input("confirm_new_stock", "n_clicks"),
-    State({"type": "new_stock_inp", "index": ALL}, "value")
+    State({"type": "new_stock_inp", "index": ALL}, "value"),
+    State("prods_file", "filename")
 )
-def open_stock(trigger_open, trigger_close, inps):
+def open_stock(trigger_open, trigger_close, inps, prods_file):
     trigger = ctx.triggered_id
     if trigger == "open_update_stock":
         return True, no_update
     if trigger == "confirm_new_stock":
-        prods = pd.read_csv("data/prods.csv")
+        prods = pd.read_csv(prods_file)
         prods['current stock'] = list(inps)
         prods['waste'] = [((p['initial stock'] - p['current stock']) - p['sold']) * p['price'] for _, p in prods.iterrows()]
-        prods.to_csv("data/prods.csv", index=False)
+        prods.to_csv(prods_file, index=False)
         
         n_users = len(get_users())
         general_waste = sum(prods["waste"]) / n_users

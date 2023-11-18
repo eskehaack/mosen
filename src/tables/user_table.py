@@ -1,8 +1,8 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL
 
-def get_users():
-    return pd.read_csv("data/users.csv")
+def get_users(path):
+    return pd.read_csv(path)
 
 @callback(
     Output('new_user_modal', 'is_open'),
@@ -42,16 +42,17 @@ def enable_confirm(inps, ids):
     State('user_table', 'data'),
     State({"type": "user_input", "index": ALL}, "value"),
     State({"type": "user_input", "index": ALL}, "id"),
+    State("users_file", "filename"),
     prevent_initial_call=True
 )
-def add_row(n_clicks, data, vals, ids):
+def add_row(n_clicks, data, vals, ids, users_path):
     try:
         columns = data[0]
     except:
         columns = [inp['index'].split("_")[1] for inp in ids]
     if n_clicks > 0:
         data.append({c: vals[i] for i, c in enumerate(columns)})
-    pd.DataFrame(data).to_csv("data/users.csv",index=False)
+    pd.DataFrame(data).to_csv(users_path,index=False)
     return data
 
 @callback(

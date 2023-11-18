@@ -2,6 +2,7 @@ from dash import dcc, html, callback, Input, Output
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from dash import dash_table
+import os
 from src.tables.user_table import get_users
 from src.tables.prod_table import get_prods, get_waste
 from src.tables.trans_table import get_trans, get_revenue, get_income
@@ -9,9 +10,15 @@ from src.modals import new_user_modal, new_prod_modal, update_stock_modal
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
 from src.components import get_upload
+from src.connection import get_password, get_paths
 from app import app
 
-def user_settings_layout():
+PASSWORD = get_password()
+
+def user_settings_layout(user_path):
+    for file in [user_path]:
+        if not os.path.isfile(file):
+            return dbc.Container([html.H1("Error 404, file path not found")])
     layout = dbc.Container([
             dbc.Row(
                 [
@@ -26,7 +33,7 @@ def user_settings_layout():
                         html.Div([
                                 dash_table.DataTable(
                                     id="user_table", 
-                                    data=get_users().to_dict(orient="records"), 
+                                    data=get_users(user_path).to_dict(orient="records"), 
                                     row_deletable=True,
                                 )
                             ],
@@ -42,7 +49,10 @@ def user_settings_layout():
     )
     return layout
 
-def product_settings_layout():
+def product_settings_layout(prods_path):
+    for file in [prods_path]:
+        if not os.path.isfile(file):
+            return dbc.Container([html.H1("Error 404, file path not found")])
     layout = dbc.Container([
         dbc.Row([
                 dbc.Col(
@@ -55,7 +65,7 @@ def product_settings_layout():
                 ),
                 dbc.Col(
                     html.Div([
-                        dash_table.DataTable(id="prod_table", data=get_prods().to_dict(orient="records"))
+                        dash_table.DataTable(id="prod_table", data=get_prods(prods_path).to_dict(orient="records"))
                     ]),
                     width=9
                 )
@@ -68,15 +78,18 @@ def product_settings_layout():
     ])
     return layout
 
-def transaction_settings_layout():
+def transaction_settings_layout(trans_path, users_path, prods_path):
+    for file in [trans_path, users_path, prods_path]:
+        if not os.path.isfile(file):
+            return dbc.Container([html.H1("Error 404, file path not found")])
     layout = dbc.Container([
         dbc.Row(
             [
                 dbc.Col(
                     html.Div([
-                        html.P(f"Total revenue: {get_revenue()}"),
+                        html.P(f"Total revenue: {get_revenue(trans_path)}"),
                         html.Hr(),
-                        html.P(f"Total waste generated: {get_waste()}")
+                        html.P(f"Total waste generated: {get_waste(prods_path)}")
                     ]),
                     width=3
                 ),
@@ -85,13 +98,13 @@ def transaction_settings_layout():
                         [
                             dash_table.DataTable(
                                 id="trans_table", 
-                                data=get_trans()[['barcode_user', 'user', 'product', 'price', 'timestamp']].to_dict(orient="records"),
+                                data=get_trans(trans_path).to_dict(orient="records"), #[['barcode_user', 'user', 'product', 'price', 'timestamp']].to_dict(orient="records"),
                                 style_table={'height': '300px', 'overflowY': 'auto'},
                             ),
                             html.Hr(),
                             dash_table.DataTable(
                                 id="income_table", 
-                                data=get_income(),
+                                data=get_income(trans_path, users_path),
                                 style_table={'height': '300px', 'overflowY': 'auto'},
                             ),
                         ]
@@ -162,28 +175,41 @@ def settings_settings_layout():
                     ),
                     width=12
                 ),
+                html.Hr(),
+                dbc.Col(
+                  dbc.Row(
+                        [
+                            dbc.Col(width=8),
+                            html.Br(),
+                            dbc.Col(dbc.Button("Confirm Settings", id="confirm_settings"))
+                        ]
+                    ),
+                    width=12
+                ),
             ]
         )
     ])
     return layout
 
-settings_modal = dbc.Modal([
-            dbc.ModalHeader(html.H1("Settings")),
-            
-            dbc.ModalBody(
-                dcc.Tabs(id="setting_tabs", children=[
-                    dcc.Tab(label='Users', value='users', children=user_settings_layout(), id="user_settings"),
-                    dcc.Tab(label='Products', value='products', children=product_settings_layout(), id="product_settings"),
-                    dcc.Tab(label='Economy', value='economy', children=transaction_settings_layout(), id="economy_settings"),
-                    dcc.Tab(label='Settings', value='settings', children=settings_settings_layout(), id='settings_settings'),
-                ]),
-            )
+def settings_mode_func():
+    prods_path, trans_path, users_path = get_paths()
+    return dbc.Modal([
+                dbc.ModalHeader(html.H1("Settings")),
+                
+                dbc.ModalBody(
+                    dcc.Tabs(id="setting_tabs", children=[
+                        dcc.Tab(label='Users', value='users', children=user_settings_layout(users_path), id="user_settings"),
+                        dcc.Tab(label='Products', value='products', children=product_settings_layout(prods_path), id="product_settings"),
+                        dcc.Tab(label='Economy', value='economy', children=transaction_settings_layout(trans_path, users_path, prods_path), id="economy_settings"),
+                        dcc.Tab(label='Settings', value='settings', children=settings_settings_layout(), id='settings_settings'),
+                    ]),
+                )
 
-        ],
-        id="settings_modal",
-        fullscreen=True,
-        is_open=False     
-    )
+            ],
+            id="settings_modal",
+            fullscreen=True,
+            is_open=False     
+        )
 
 def layout_func():
     
@@ -218,8 +244,9 @@ def layout_func():
                     ),
                 ]
             ),
-            settings_modal,
+            settings_mode_func(),
             trans_modal(),
+            dcc.Store(id="update_settings")
         ]
     )
     
@@ -241,4 +268,5 @@ def open_settings(trigger):
     Input("setting_tabs", "value")
 )
 def update_trans_table(trigger):
-    return user_settings_layout(), product_settings_layout(), transaction_settings_layout()
+    prods_path, trans_path, users_path = get_paths()
+    return user_settings_layout(users_path), product_settings_layout(prods_path), transaction_settings_layout(trans_path, users_path, prods_path)

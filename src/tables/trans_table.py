@@ -1,18 +1,18 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL
 
-def get_trans():
-    return pd.read_csv("data/transactions.csv")
+def get_trans(path):
+    return pd.read_csv(path)
 
-def get_revenue():
+def get_revenue(trans_path):
     try:
-        return sum(map(int, list(get_trans()['price'])))
+        return sum(map(int, list(get_trans(trans_path)['price'])))
     except KeyError:
         return 0
     
-def get_income():
-    trans = get_trans()
-    users = pd.read_csv("data/users.csv")
+def get_income(trans_path, users_path):
+    trans = get_trans(trans_path)
+    users = pd.read_csv(users_path)
     user_income = list()
     for user in set(trans['barcode_user']):
         user_income.append(
