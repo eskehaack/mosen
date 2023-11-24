@@ -42,7 +42,7 @@ def enable_confirm(inps, ids):
     State('user_table', 'data'),
     State({"type": "user_input", "index": ALL}, "value"),
     State({"type": "user_input", "index": ALL}, "id"),
-    State("users_file", "filename"),
+    State("user_file", "value"),
     prevent_initial_call=True
 )
 def add_row(n_clicks, data, vals, ids, users_path):

@@ -160,15 +160,16 @@ def new_trans(trigger, barcode, current, user_barcode, display_text):
     Output("new_trans_user", "children"),
     Input("new_trans_inp", "n_submit"),
     State("new_trans_inp", "value"),
-    State("waste_value", "data")
+    State("waste_value", "data"),
+    State("display_bill_switch", "value")
 )
-def show_balance(trigger, user_id, user_waste):
-    if trigger is not None:
+def show_balance(trigger, user_id, user_waste, display_bill_switch):
+    if trigger is not None and display_bill_switch:
         trans = pd.read_csv("data/transactions.csv")
         users = pd.read_csv("data/users.csv")
         
         user = str(users[users["barcode"] == int(user_id)]['name'][0])
         user_balance = sum(trans[trans['barcode_user'] == int(user_id)]['price'])
-        return f"{user} - Current bill is: {user_balance + user_waste} DKK"
+        return f"{user} - Current bill is: {user_balance} DKK and: {user_waste} DKK in waste."
     return no_update
     

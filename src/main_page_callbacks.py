@@ -38,7 +38,7 @@ def update_overview_graph(trans_modal_open):
     State("settings_password", "value"),
     State("user_file", "value"),
     State("trans_file", "value"),
-    State("prod_file", "value"),
+    State("prods_file", "value"),
 )
 def update_settings(trigger, password, user_file, trans_file, prod_file):
     if trigger is None:

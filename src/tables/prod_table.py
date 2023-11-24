@@ -47,7 +47,7 @@ def enable_confirm(inps):
     Input("confirm_new_stock", "n_clicks"),
     State({"type": "prod_input", "index": ALL}, "value"),
     State({"type": "prod_input", "index": ALL}, "id"),
-    State("prods_file", "filename"),
+    State("prods_file", "value"),
     prevent_initial_call=True
 )
 def add_row(n_clicks, stock_trigger, vals, ids, prods_path):
@@ -80,9 +80,10 @@ def validate_barcode_user(value, data):
     Input("open_update_stock", "n_clicks"),
     Input("confirm_new_stock", "n_clicks"),
     State({"type": "new_stock_inp", "index": ALL}, "value"),
-    State("prods_file", "filename")
+    State("prods_file", "value"),
+    State("user_file", "value")
 )
-def open_stock(trigger_open, trigger_close, inps, prods_file):
+def open_stock(trigger_open, trigger_close, inps, prods_file, user_file):
     trigger = ctx.triggered_id
     if trigger == "open_update_stock":
         return True, no_update
@@ -92,7 +93,7 @@ def open_stock(trigger_open, trigger_close, inps, prods_file):
         prods['waste'] = [((p['initial stock'] - p['current stock']) - p['sold']) * p['price'] for _, p in prods.iterrows()]
         prods.to_csv(prods_file, index=False)
         
-        n_users = len(get_users())
+        n_users = len(get_users(user_file))
         general_waste = sum(prods["waste"]) / n_users
         return False, general_waste
     return no_update, no_update

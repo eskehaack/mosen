@@ -154,7 +154,7 @@ def settings_settings_layout(password, trans_path, users_path, prods_path, show_
                         [
                             dbc.Col(html.H3("Product Table Location: ")),
                             html.Br(),
-                            dbc.Col(get_upload("prod_file", prods_path))
+                            dbc.Col(get_upload("prods_file", prods_path))
                         ]
                     ),
                     width=12

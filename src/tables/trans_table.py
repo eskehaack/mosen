@@ -16,7 +16,6 @@ def get_income(trans_path, users_path):
     user_income = list()
     for user in set(trans['barcode_user']):
         user_row = users[users['barcode'] == int(user)]
-        print(user_row, type(user_row))
         user_income.append(
             {
                 'barcode': user, 
