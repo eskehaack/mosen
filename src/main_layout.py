@@ -50,7 +50,7 @@ def user_settings_layout(user_path):
     )
     return layout
 
-def product_settings_layout(prods_path):
+def product_settings_layout(prods_path, users_path):
     for file in [prods_path]:
         if not os.path.isfile(file):
             return dbc.Container([html.H1("Error 404, file path not found")])
@@ -75,7 +75,7 @@ def product_settings_layout(prods_path):
         ),
         new_prod_modal(),
         update_stock_modal(),
-        dcc.Store(id="waste_value", data=0),
+        dcc.Store(id="waste_value", data=get_waste(prods_path) / len(get_users(users_path))),
     ])
     return layout
 
