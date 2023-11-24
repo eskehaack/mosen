@@ -1,8 +1,6 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL
-
-def get_trans(path):
-    return pd.read_csv(path)
+from src.data_connectors import get_trans, get_users
 
 def get_revenue(trans_path):
     try:
@@ -12,7 +10,7 @@ def get_revenue(trans_path):
     
 def get_income(trans_path, users_path):
     trans = get_trans(trans_path)
-    users = pd.read_csv(users_path)
+    users = get_users(users_path)
     user_income = list()
     for user in set(trans['barcode_user']):
         user_row = users[users['barcode'] == int(user)]

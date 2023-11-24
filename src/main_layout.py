@@ -3,14 +3,14 @@ import plotly.express as px
 import dash_bootstrap_components as dbc
 from dash import dash_table
 import os
-from src.tables.user_table import get_users
-from src.tables.prod_table import get_prods, get_waste
-from src.tables.trans_table import get_trans, get_revenue, get_income
+from src.tables.prod_table import get_waste
+from src.tables.trans_table import get_revenue, get_income
 from src.modals import new_user_modal, new_prod_modal, update_stock_modal, password_modal
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
 from src.components import get_upload
 from src.connection import get_password, get_paths, get_show_bill
+from src.data_connectors import get_trans, get_users, get_prods
 from app import app
 
 PASSWORD = get_password()
@@ -205,7 +205,7 @@ def settings_mode_func():
                 dbc.ModalBody(
                     dcc.Tabs(id="setting_tabs", children=[
                         dcc.Tab(label='Users', value='users', children=user_settings_layout(users_path), id="user_settings"),
-                        dcc.Tab(label='Products', value='products', children=product_settings_layout(prods_path), id="product_settings"),
+                        dcc.Tab(label='Products', value='products', children=product_settings_layout(prods_path, users_path), id="product_settings"),
                         dcc.Tab(label='Economy', value='economy', children=transaction_settings_layout(trans_path, users_path, prods_path), id="economy_settings"),
                         dcc.Tab(label='Settings', value='settings', children=settings_settings_layout(PASSWORD, trans_path, users_path, prods_path, SHOW_BILL), id='settings_settings'),
                     ]),
@@ -294,4 +294,4 @@ def open_settings(trigger, password):
 )
 def update_trans_table(trigger):
     prods_path, trans_path, users_path = get_paths()
-    return user_settings_layout(users_path), product_settings_layout(prods_path), transaction_settings_layout(trans_path, users_path, prods_path)
+    return user_settings_layout(users_path), product_settings_layout(prods_path, users_path), transaction_settings_layout(trans_path, users_path, prods_path)

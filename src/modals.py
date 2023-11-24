@@ -1,6 +1,7 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 import pandas as pd
+from src.data_connectors import get_prods, get_trans, get_users
 
 USER_COLS = [
     "rank",
@@ -76,7 +77,7 @@ def new_prod_modal():
     return mdl
 
 def update_stock_modal():
-    prods = pd.read_csv('data/prods.csv').to_dict(orient='records')
+    prods = get_prods('data/prods.csv').to_dict(orient='records')
     new_stock_inps = [
             dbc.Row(
                 [

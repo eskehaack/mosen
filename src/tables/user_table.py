@@ -1,9 +1,6 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL
 
-def get_users(path):
-    return pd.read_csv(path)
-
 @callback(
     Output('new_user_modal', 'is_open'),
     Output({"type": "user_input", "index": "inp_barcode_user"}, "value"),

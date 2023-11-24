@@ -2,11 +2,12 @@ from dash import Output, Input, State, callback, ctx, no_update
 import pandas as pd
 import plotly.express as px
 from src.connection import update_values
+from src.data_connectors import get_trans, get_users, get_prods
 
 def create_overview(plot_col):   
-    transactions = pd.read_csv("data/transactions.csv")
-    users = pd.read_csv("data/users.csv")
-    prods = pd.read_csv("data/prods.csv")
+    transactions = get_trans("data/transactions.csv")
+    users = get_users("data/users.csv")
+    prods = get_prods("data/prods.csv")
     
     concatinated_dict = {row['name']: row[plot_col] for i, row in users.iterrows()}
     ranks = list(users[plot_col].unique())

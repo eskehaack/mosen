@@ -1,9 +1,6 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL, MATCH, no_update
-from src.tables.user_table import get_users
-
-def get_prods(path):
-    return pd.read_csv(path)
+from src.data_connectors import get_users, get_prods, get_trans
 
 def get_waste(prods_path):
     prods = get_prods(prods_path)
@@ -88,7 +85,7 @@ def open_stock(trigger_open, trigger_close, inps, prods_file, user_file):
     if trigger == "open_update_stock":
         return True, no_update
     if trigger == "confirm_new_stock":
-        prods = pd.read_csv(prods_file)
+        prods = get_prods(prods_file)
         prods['current stock'] = list(inps)
         prods['waste'] = [((p['initial stock'] - p['current stock']) - p['sold']) * p['price'] for _, p in prods.iterrows()]
         prods.to_csv(prods_file, index=False)

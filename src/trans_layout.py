@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+from src.data_connectors import get_prods, get_trans, get_users
 
 def trans_modal():
     modal = dbc.Modal(
@@ -60,9 +61,9 @@ def trans_modal():
     State("new_trans_inp", "value")
 )
 def get_transactions(trigger, barcode):
-    transactions = pd.read_csv("data/transactions.csv")
-    users = pd.read_csv("data/users.csv")
-    prods = pd.read_csv("data/prods.csv")
+    transactions = get_trans("data/transactions.csv")
+    users = get_users("data/users.csv")
+    prods = get_prods("data/prods.csv")
     
     user_barcodes = list(users['barcode'])
     if not (trigger is not None and int(barcode) in user_barcodes):
@@ -85,7 +86,7 @@ def get_transactions(trigger, barcode):
     prevent_initial_call=True
 )
 def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close, current_trans):
-    users = pd.read_csv("data/users.csv")
+    users = get_prods("data/users.csv")
     user_barcodes = list(users['barcode'])
     trigger = ctx.triggered_id
     if trigger == "new_trans_inp":
@@ -112,9 +113,9 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close, c
     prevent_initial_call=True
 )
 def new_trans(trigger, barcode, current, user_barcode, display_text):
-    prods = pd.read_csv("data/prods.csv")
-    transactions = pd.read_csv("data/transactions.csv")
-    users = pd.read_csv("data/users.csv")
+    prods = get_prods("data/prods.csv")
+    transactions = get_trans("data/transactions.csv")
+    users = get_prods("data/users.csv")
     if len(barcode) == 2:
         if current:
             try:
@@ -131,6 +132,9 @@ def new_trans(trigger, barcode, current, user_barcode, display_text):
                 current[-1][4],
                 str(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
             ]
+            for i, t in enumerate(current):
+                if transaction_str[2] == t[2]:
+                    del current[i]
             for _ in range(int(barcode)):
                 current.append(transaction_str)
             
@@ -189,8 +193,8 @@ def new_trans(trigger, barcode, current, user_barcode, display_text):
 )
 def show_balance(trigger, user_id, user_waste, display_bill_switch):
     if trigger is not None and display_bill_switch:
-        trans = pd.read_csv("data/transactions.csv")
-        users = pd.read_csv("data/users.csv")
+        trans = get_trans("data/transactions.csv")
+        users = get_prods("data/users.csv")
         try:
             user = str(users[users["barcode"] == int(user_id)]['name'][0])
         except:
