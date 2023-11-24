@@ -15,11 +15,29 @@ def get_income(trans_path, users_path):
     users = pd.read_csv(users_path)
     user_income = list()
     for user in set(trans['barcode_user']):
+        user_row = users[users['barcode'] == int(user)]
+        print(user_row, type(user_row))
         user_income.append(
             {
                 'barcode': user, 
-                'name': str(users[users['barcode'] == int(user)]['name'][0]),
+                'name': str(user_row['name'][0]),
+                'rank': str(user_row['rank'][0]),
+                'team': str(user_row['team'][0]),
                 'price': sum(list(trans[trans['barcode_user'] == int(user)]['price']))
             }
         )
     return user_income
+
+@callback(
+    Output("placeholder_for_empty_output", "data"),
+    Input("export_payments", "n_clicks"),
+    State("user_file", "value"),
+    State("trans_file", "value"),
+    
+)
+def export_payments(trigger, user_path, trans_path):
+    if trigger is not None and trigger > 0:
+        data = get_income(trans_path, user_path)
+        data = pd.DataFrame(data).to_csv("./data/payments.csv")
+    
+    return None

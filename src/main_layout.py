@@ -83,38 +83,43 @@ def transaction_settings_layout(trans_path, users_path, prods_path):
     for file in [trans_path, users_path, prods_path]:
         if not os.path.isfile(file):
             return dbc.Container([html.H1("Error 404, file path not found")])
-    layout = dbc.Container([
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div([
-                        html.P(f"Total revenue: {get_revenue(trans_path)}"),
-                        html.Hr(),
-                        html.P(f"Total waste generated: {get_waste(prods_path)}")
-                    ]),
-                    width=3
-                ),
-                dbc.Col(
-                    html.Div(
-                        [
-                            dash_table.DataTable(
-                                id="trans_table", 
-                                data=get_trans(trans_path).to_dict(orient="records"), #[['barcode_user', 'user', 'product', 'price', 'timestamp']].to_dict(orient="records"),
-                                style_table={'height': '300px', 'overflowY': 'auto'},
-                            ),
+    layout = dbc.Container(
+        [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        html.Div([
+                            html.P(f"Total revenue: {get_revenue(trans_path)}"),
                             html.Hr(),
-                            dash_table.DataTable(
-                                id="income_table", 
-                                data=get_income(trans_path, users_path),
-                                style_table={'height': '300px', 'overflowY': 'auto'},
+                            html.P(f"Total waste generated: {get_waste(prods_path)}"),
+                            html.Hr(),
+                            dbc.Button("Export payments", id="export_payments")
+                        ]),
+                        width=3
+                    ),
+                    dbc.Col(
+                        html.Div(
+                            [
+                                dash_table.DataTable(
+                                    id="trans_table", 
+                                    data=get_trans(trans_path).to_dict(orient="records"), #[['barcode_user', 'user', 'product', 'price', 'timestamp']].to_dict(orient="records"),
+                                    style_table={'height': '300px', 'overflowY': 'auto'},
+                                ),
+                                html.Hr(),
+                                dash_table.DataTable(
+                                    id="income_table", 
+                                    data=get_income(trans_path, users_path),
+                                    style_table={'height': '300px', 'overflowY': 'auto'},
+                                ),
+                            ]
                             ),
-                        ]
-                        ),
-                    width=9
-                )
-            ]
-        )
-    ])
+                        width=9
+                    )
+                ]
+            ),
+            dcc.Store(id="placeholder_for_empty_output")
+        ],
+    )
     return layout
 
 def settings_settings_layout(password, trans_path, users_path, prods_path, show_bill):
@@ -265,7 +270,6 @@ def open_settings(trigger_open, trigger_close, password):
     if trigger is not None and trigger == "open_settings":
         return True
     elif trigger is not None and trigger == "confirm_password":
-        print(password, PASSWORD)
         if password == PASSWORD:
             return False
     return no_update
