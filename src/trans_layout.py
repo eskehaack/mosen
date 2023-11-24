@@ -115,10 +115,34 @@ def new_trans(trigger, barcode, current, user_barcode, display_text):
     prods = pd.read_csv("data/prods.csv")
     transactions = pd.read_csv("data/transactions.csv")
     users = pd.read_csv("data/users.csv")
+    if len(barcode) == 2:
+        if current:
+            try:
+                product = prods[prods['barcode'] == int(barcode)]
+                user = users[users['barcode'] == int(user_barcode)]
+            except:
+                return no_update,"",no_update
+            
+            transaction_str = [
+                user_barcode,
+                user['name'][0],
+                barcode,
+                current[-1][3],
+                current[-1][4],
+                str(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+            ]
+            for _ in range(int(barcode)):
+                current.append(transaction_str)
+            
+            display_text[-1] = html.H2(f"{str(int(barcode))} x: {current[-1][3]}")
+            
+            return display_text, "", current
+    
     if barcode == user_barcode:
         return [html.H1("Products: ")], "", no_update
-    if int(barcode) not in list(prods['barcode']):
+    elif int(barcode) not in list(prods['barcode']):
         return no_update, "", no_update
+    
     try:
         product = prods[prods['barcode'] == int(barcode)]
         user = users[users['barcode'] == int(user_barcode)]
@@ -167,8 +191,10 @@ def show_balance(trigger, user_id, user_waste, display_bill_switch):
     if trigger is not None and display_bill_switch:
         trans = pd.read_csv("data/transactions.csv")
         users = pd.read_csv("data/users.csv")
-        
-        user = str(users[users["barcode"] == int(user_id)]['name'][0])
+        try:
+            user = str(users[users["barcode"] == int(user_id)]['name'][0])
+        except:
+            return no_update
         user_balance = sum(trans[trans['barcode_user'] == int(user_id)]['price'])
         return f"{user} - Current bill is: {user_balance} DKK and: {user_waste} DKK in waste."
     return no_update
