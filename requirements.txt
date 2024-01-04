@@ -1,4 +1,5 @@
 ansi2html==1.8.0
+antiorm==1.2.1
 certifi==2023.7.22
 charset-normalizer==3.2.0
 click==8.1.6
@@ -8,6 +9,8 @@ dash-bootstrap-components==1.4.2
 dash-core-components==2.0.0
 dash-html-components==2.0.0
 dash-table==5.0.0
+db==0.1.1
+db-sqlite3==0.0.1
 Flask==2.2.5
 idna==3.4
 importlib-metadata==6.8.0
