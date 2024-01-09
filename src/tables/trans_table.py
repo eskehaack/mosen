@@ -2,39 +2,41 @@ import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL
 from src.data_connectors import get_trans, get_users
 
-def get_revenue(trans_path):
+
+def get_revenue():
     try:
-        return sum(map(int, list(get_trans(trans_path)['price'])))
+        return sum(map(int, list(get_trans()["price"])))
     except KeyError:
         return 0
-    
-def get_income(trans_path, users_path):
-    trans = get_trans(trans_path)
-    users = get_users(users_path)
+
+
+def get_income():
+    trans = get_trans()
+    users = get_users()
     user_income = list()
-    for user in set(trans['barcode_user']):
-        user_row = users[users['barcode'] == int(user)]
+    for user in set(trans["barcode_user"]):
+        user_row = users[users["barcode"] == int(user)]
         user_income.append(
             {
-                'barcode': user, 
-                'name': str(user_row['name'][0]),
-                'rank': str(user_row['rank'][0]),
-                'team': str(user_row['team'][0]),
-                'price': sum(list(trans[trans['barcode_user'] == int(user)]['price']))
+                "barcode": user,
+                "name": str(user_row["name"][0]),
+                "rank": str(user_row["rank"][0]),
+                "team": str(user_row["team"][0]),
+                "price": sum(list(trans[trans["barcode_user"] == int(user)]["price"])),
             }
         )
     return user_income
+
 
 @callback(
     Output("placeholder_for_empty_output", "data"),
     Input("export_payments", "n_clicks"),
     State("user_file", "value"),
     State("trans_file", "value"),
-    
 )
-def export_payments(trigger, user_path, trans_path):
+def export_payments(trigger):
     if trigger is not None and trigger > 0:
-        data = get_income(trans_path, user_path)
+        data = get_income()
         data = pd.DataFrame(data).to_csv("./data/payments.csv")
-    
+
     return None
