@@ -1,4 +1,5 @@
 from dash import dcc, html, callback, Input, Output, State, ctx, no_update
+import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from dash import dash_table
@@ -15,17 +16,18 @@ from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
 from src.components import get_upload
 from src.connection import get_password, get_paths, get_show_bill
-from src.data_connectors import get_trans, get_users, get_prods
+from src.data_connectors import get_prods, get_trans, get_users
 from app import app
 
 PASSWORD = get_password()
 SHOW_BILL = get_show_bill()
 
+prods = get_prods()
+trans = get_trans()
+users = get_users()
 
-def user_settings_layout(user_path):
-    for file in [user_path]:
-        if not os.path.isfile(file):
-            return dbc.Container([html.H1("Error 404, file path not found")])
+
+def user_settings_layout():
     layout = dbc.Container(
         [
             dbc.Row(
@@ -43,7 +45,7 @@ def user_settings_layout(user_path):
                             [
                                 dash_table.DataTable(
                                     id="user_table",
-                                    data=get_users().to_dict(orient="records"),
+                                    data=users.to_dict(orient="records"),
                                     row_deletable=True,
                                 )
                             ],
@@ -60,10 +62,7 @@ def user_settings_layout(user_path):
     return layout
 
 
-def product_settings_layout(prods_path, users_path):
-    for file in [prods_path]:
-        if not os.path.isfile(file):
-            return dbc.Container([html.H1("Error 404, file path not found")])
+def product_settings_layout():
     layout = dbc.Container(
         [
             dbc.Row(
@@ -83,7 +82,7 @@ def product_settings_layout(prods_path, users_path):
                             [
                                 dash_table.DataTable(
                                     id="prod_table",
-                                    data=get_prods().to_dict(orient="records"),
+                                    data=prods.to_dict(orient="records"),
                                 )
                             ]
                         ),
@@ -96,17 +95,14 @@ def product_settings_layout(prods_path, users_path):
             update_stock_modal(),
             dcc.Store(
                 id="waste_value",
-                data=get_waste() / len(get_users()),
+                data=0 if len(users) == 0 else get_waste() / len(users),
             ),
         ]
     )
     return layout
 
 
-def transaction_settings_layout(trans_path, users_path, prods_path):
-    for file in [trans_path, users_path, prods_path]:
-        if not os.path.isfile(file):
-            return dbc.Container([html.H1("Error 404, file path not found")])
+def transaction_settings_layout():
     layout = dbc.Container(
         [
             dbc.Row(
@@ -128,7 +124,7 @@ def transaction_settings_layout(trans_path, users_path, prods_path):
                             [
                                 dash_table.DataTable(
                                     id="trans_table",
-                                    data=get_trans().to_dict(
+                                    data=trans.to_dict(
                                         orient="records"
                                     ),  # [['barcode_user', 'user', 'product', 'price', 'timestamp']].to_dict(orient="records"),
                                     style_table={
@@ -262,21 +258,19 @@ def settings_mode_func():
                         dcc.Tab(
                             label="Users",
                             value="users",
-                            children=user_settings_layout(users_path),
+                            children=user_settings_layout(),
                             id="user_settings",
                         ),
                         dcc.Tab(
                             label="Products",
                             value="products",
-                            children=product_settings_layout(prods_path, users_path),
+                            children=product_settings_layout(),
                             id="product_settings",
                         ),
                         dcc.Tab(
                             label="Economy",
                             value="economy",
-                            children=transaction_settings_layout(
-                                trans_path, users_path, prods_path
-                            ),
+                            children=transaction_settings_layout(),
                             id="economy_settings",
                         ),
                         dcc.Tab(
@@ -384,7 +378,7 @@ def open_settings(trigger, password):
 def update_trans_table(trigger):
     prods_path, trans_path, users_path = get_paths()
     return (
-        user_settings_layout(users_path),
-        product_settings_layout(prods_path, users_path),
-        transaction_settings_layout(trans_path, users_path, prods_path),
+        user_settings_layout(),
+        product_settings_layout(),
+        transaction_settings_layout(),
     )

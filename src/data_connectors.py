@@ -11,9 +11,7 @@ def init():
 def get_prods():
     con, cur = init()
     data = pd.DataFrame(cur.execute("SELECT * FROM prods"))
-    if len(data) == 0:
-        return False
-    data.columns = [
+    cols = [
         "barcode",
         "name",
         "price",
@@ -23,15 +21,17 @@ def get_prods():
         "waste",
         "sold",
     ]
+    if len(data) == 0:
+        data = pd.DataFrame(columns=cols)
+    else:
+        data.columns = cols
     return data
 
 
 def get_trans():
     con, cur = init()
     data = pd.DataFrame(cur.execute("SELECT * FROM transactions"))
-    if len(data) == 0:
-        return False
-    data.columns = [
+    cols = [
         "barcode_user",
         "user",
         "barcode_prod",
@@ -39,13 +39,19 @@ def get_trans():
         "price",
         "timestamp",
     ]
+    if len(data) == 0:
+        data = pd.DataFrame(columns=cols)
+    else:
+        data.columns = cols
     return data
 
 
 def get_users():
     con, cur = init()
     data = pd.DataFrame(cur.execute("SELECT * FROM users"))
+    cols = ["barcode", "name", "rank", "team"]
     if len(data) == 0:
-        return False
-    data.columns = ["barcode", "name", "rank", "team"]
+        data = pd.DataFrame(columns=cols)
+    else:
+        data.columns = cols
     return data

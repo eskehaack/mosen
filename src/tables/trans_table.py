@@ -6,7 +6,7 @@ from src.data_connectors import get_trans, get_users
 def get_revenue():
     try:
         return sum(map(int, list(get_trans()["price"])))
-    except KeyError:
+    except:
         return 0
 
 
@@ -31,8 +31,6 @@ def get_income():
 @callback(
     Output("placeholder_for_empty_output", "data"),
     Input("export_payments", "n_clicks"),
-    State("user_file", "value"),
-    State("trans_file", "value"),
 )
 def export_payments(trigger):
     if trigger is not None and trigger > 0:
