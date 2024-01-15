@@ -152,3 +152,5 @@ cython_debug/
 /__pycache__
 src/__pycache__/modals.cpython-38.pyc
 src/tables/__pycache__/prod_table.cpython-38.pyc
+
+data/
