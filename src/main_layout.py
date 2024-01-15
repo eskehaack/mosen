@@ -343,6 +343,12 @@ def layout_func():
             trans_modal(),
             password_modal(),
             dcc.Store(id="update_settings"),
+            dbc.Alert(
+                "There are no users, ya dumb dumb!",
+                color="danger",
+                id="bad_barcode_alert",
+                is_open=False,
+            ),
         ]
     )
 

@@ -1,2 +1,2 @@
-barcode,name,price,category,current stock,initial stock,waste,sold
-100001,Ol,11,Ol,90,1000,9647,38
+barcode,name,price,category,current_stock,initial_stock,waste,sold
+100001,Ol,11,Ol,90,1000,9647,0

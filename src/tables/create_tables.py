@@ -37,12 +37,19 @@ tables = {
             price varchar(255),
             timestamp varchar(255)
         )
+    """,
+    "temporary": """
+        CREATE TABLE temporary (
+            barcode_prod varchar(255),
+            name varchar(255)
+        )
         """,
 }
 
 if __name__ == "__main__":
     con, cur = init()
     for table, definition in tables.items():
+        print(table)
         cur.execute(f"DROP TABLE IF EXISTS {table}")
         con.commit()
         cur.execute(definition)

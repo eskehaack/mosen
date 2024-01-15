@@ -3,7 +3,15 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-from src.data_connectors import get_prods, get_trans, get_users
+from src.data_connectors import (
+    get_prods,
+    get_trans,
+    get_users,
+    get_current_trans,
+    update_current_trans,
+    upload_values,
+    reset_current_trans,
+)
 
 
 def trans_modal():
@@ -39,11 +47,12 @@ def trans_modal():
                             [
                                 dash_table.DataTable(id="show_prods"),
                                 dbc.Input(
-                                    placeholder="Product barcode", id="prod_barcode"
+                                    placeholder="Product barcode",
+                                    id="prod_barcode",
+                                    autoFocus=True,
                                 ),
                             ]
                         ),
-                        dcc.Store(id="current_trans"),
                     ]
                 )
             ),
@@ -78,7 +87,6 @@ def get_transactions(trigger, barcode):
             for p in list(prods["name"])
         }
     ]
-
     return px.bar(trans_data), trans_data
 
 
@@ -86,117 +94,93 @@ def get_transactions(trigger, barcode):
     Output("new_trans_modal", "is_open"),
     Output("new_trans_inp", "value"),
     Output("prod_barcode", "value", allow_duplicate=True),
+    Output("bad_barcode_alert", "is_open"),
     Input("new_trans_inp", "n_submit"),
     Input("prod_barcode", "n_submit"),
     State("new_trans_inp", "value"),
     State("prod_barcode", "value"),
-    State("current_trans", "data"),
     prevent_initial_call=True,
 )
-def open_trans_modal(
-    trigger_open, trigger_close, barcode_open, barcode_close, current_trans
-):
-    users = get_prods("data/users.csv")
+def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
+    users = get_users()
+    prods = get_prods()
+    transactions = get_trans()
+    current = get_current_trans()
     user_barcodes = list(users["barcode"])
     trigger = ctx.triggered_id
     if trigger == "new_trans_inp":
+        if len(user_barcodes) < 1:
+            return no_update, "", no_update, True
         if int(barcode_open) in user_barcodes:
-            return True, no_update, ""
-        return no_update, "", no_update
+            reset_current_trans()
+            return True, no_update, "", False
+        return no_update, "", no_update, False
     elif trigger == "prod_barcode" and int(barcode_close) == int(barcode_open):
-        if current_trans is not None:
-            current_trans = "\n" + "\n".join([",".join(t) for t in current_trans])
-            with open("data/transactions.csv", "a") as fd:
-                fd.write(current_trans)
-        return False, "", no_update
-    return no_update, no_update, no_update
+        for _, row in current.iterrows():
+            new_row = pd.DataFrame(
+                [
+                    {
+                        "barcode_user": barcode_open,
+                        "user": str(
+                            users[users["barcode"] == int(barcode_open)]["name"].values[
+                                0
+                            ]
+                        ),
+                        "barcode_prod": row["barcode_prod"],
+                        "product": row["name"],
+                        "price": str(
+                            prods[prods["barcode"] == int(row["barcode_prod"])][
+                                "price"
+                            ][0]
+                        ),
+                        "timestamp": str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
+                    }
+                ]
+            )
+            transactions = pd.concat([transactions, new_row])
+        upload_values(transactions, "transactions")
+        return False, "", no_update, False
+    return no_update, no_update, no_update, False
 
 
 @callback(
     Output("show_current_prods", "children"),
     Output("prod_barcode", "value"),
-    Output("current_trans", "data"),
     Input("prod_barcode", "n_submit"),
     State("prod_barcode", "value"),
-    State("current_trans", "data"),
     State("new_trans_inp", "value"),
-    State("show_current_prods", "children"),
     prevent_initial_call=True,
 )
-def new_trans(trigger, barcode, current, user_barcode, display_text):
-    prods = get_prods("data/prods.csv")
-    transactions = get_trans("data/transactions.csv")
-    users = get_prods("data/users.csv")
-    if len(barcode) == 2:
-        if current:
-            try:
-                product = prods[prods["barcode"] == int(barcode)]
-                user = users[users["barcode"] == int(user_barcode)]
-            except:
-                return no_update, "", no_update
-
-            transaction_str = [
-                user_barcode,
-                user["name"][0],
-                barcode,
-                current[-1][3],
-                current[-1][4],
-                str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
-            ]
-            for i, t in enumerate(current):
-                if transaction_str[2] == t[2]:
-                    del current[i]
-            for _ in range(int(barcode)):
-                current.append(transaction_str)
-
-            display_text[-1] = html.H2(f"{str(int(barcode))} x: {current[-1][3]}")
-
-            return display_text, "", current
-
+def new_trans(trigger, barcode, user_barcode):
+    prods = get_prods()
+    current = get_current_trans()
     if barcode == user_barcode:
-        return [html.H1("Products: ")], "", no_update
+        return (
+            [html.H1("Products: ")],
+            "",
+        )
     elif int(barcode) not in list(prods["barcode"]):
-        return no_update, "", no_update
-
-    try:
-        product = prods[prods["barcode"] == int(barcode)]
-        user = users[users["barcode"] == int(user_barcode)]
-    except:
-        return no_update, "", no_update
-    prod_name = product["name"][0]
-
-    transaction_str = [
-        user_barcode,
-        user["name"][0],
-        barcode,
-        prod_name,
-        str(product["price"][0]),
-        str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
-    ]
-    if not current:
-        current = list()
-    current.append(transaction_str)
-    previously_bought = False
-    for i, p in enumerate(display_text):
-        prod_str = p["props"]["children"]
-        if prod_str != "Products: " and prod_str.split(" x: ")[1] == prod_name:
-            nr = int(prod_str.split(" x: ")[0]) + 1
-            idx = i
-            previously_bought = True
-            break
-
-    if previously_bought:
-        display_text[idx] = html.H2(f"{nr} x: {prod_name}")
+        return no_update, ""
+    elif len(barcode) == 2:
+        for _ in range(int(barcode)):
+            current(pd.concat([current, current[-1]]))
     else:
-        display_text.append(html.H2(f"1 x: {prod_name}"))
+        try:
+            product = prods[prods["barcode"] == int(barcode)]
+        except:
+            return no_update, "", no_update
+        name = str(product["name"][0])
+        new_transaction = pd.DataFrame([{"barcode_prod": barcode, "name": name}])
+        current = pd.concat([current, new_transaction], ignore_index=True)
+    display_text = [html.H1("Products: ")]
+    for current_barcode in current["barcode_prod"].unique():
+        prod_name = str(current[current["barcode_prod"] == current_barcode]["name"][0])
+        current_amount = int(len(current[current["barcode_prod"] == current_barcode]))
+        display_text.append(html.H2(f"{current_amount}x: {prod_name}"))
 
-    prods["sold"] = [
-        len(transactions[transactions["barcode_prod"] == p["barcode"]])
-        for _, p in prods.iterrows()
-    ]
-    prods.to_csv("data/prods.csv", index=False)
+    update_current_trans(current)
 
-    return display_text, "", current
+    return display_text, ""
 
 
 @callback(
@@ -208,8 +192,8 @@ def new_trans(trigger, barcode, current, user_barcode, display_text):
 )
 def show_balance(trigger, user_id, user_waste, display_bill_switch):
     if trigger is not None and display_bill_switch:
-        trans = get_trans("data/transactions.csv")
-        users = get_prods("data/users.csv")
+        trans = get_trans()
+        users = get_prods()
         try:
             user = str(users[users["barcode"] == int(user_id)]["name"][0])
         except:

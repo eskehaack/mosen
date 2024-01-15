@@ -10,4 +10,4 @@ app.layout = layout_func
 # Run the app
 if __name__ == "__main__":
     print("Running....")
-    app.run(debug=True)
+    app.run(debug=False)

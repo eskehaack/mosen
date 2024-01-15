@@ -7,7 +7,7 @@ def get_waste():
     prods = get_prods()
     waste = sum(
         [
-            (p["initial_stock"] - p["current_stock"]) * p["price"]
+            (int(p["initial_stock"]) - int(p["current_stock"])) * int(p["price"])
             for _, p in prods.iterrows()
         ]
     )
@@ -63,6 +63,8 @@ def add_row(n_clicks, stock_trigger, vals, ids):
         columns = [inp["index"].split("_")[1] for inp in ids]
     if n_clicks is not None and n_clicks > 0:
         data.append({c: vals[i] for i, c in enumerate(columns)})
+        data[-1]["waste"] = 0
+        data[-1]["sold"] = 0
     upload_values(data, "prods")
     return data
 

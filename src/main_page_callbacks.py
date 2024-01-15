@@ -67,6 +67,5 @@ def update_settings(trigger, password, show_bill, db_tables, table_ids):
         if len(df) > 0:
             response = upload_values(df, table_ids[i]["index"])
             open_warning_data = False if response == "success" else True
-            print(response)
 
     return None, open_warning_password, open_warning_data
