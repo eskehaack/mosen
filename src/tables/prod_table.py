@@ -53,10 +53,9 @@ def enable_confirm(inps):
     Input("confirm_new_stock", "n_clicks"),
     State({"type": "prod_input", "index": ALL}, "value"),
     State({"type": "prod_input", "index": ALL}, "id"),
-    State("prods_file", "value"),
     prevent_initial_call=True,
 )
-def add_row(n_clicks, stock_trigger, vals, ids, prods_path):
+def add_row(n_clicks, stock_trigger, vals, ids):
     data = get_prods().to_dict(orient="records")
     try:
         columns = data[0]
@@ -64,7 +63,7 @@ def add_row(n_clicks, stock_trigger, vals, ids, prods_path):
         columns = [inp["index"].split("_")[1] for inp in ids]
     if n_clicks is not None and n_clicks > 0:
         data.append({c: vals[i] for i, c in enumerate(columns)})
-    pd.DataFrame(data).to_csv(prods_path, index=False)
+    upload_values(data, "prods")
     return data
 
 
