@@ -15,16 +15,12 @@ from src.modals import (
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
 from src.components import get_upload
-from src.connection import get_password, get_paths, get_show_bill
+from src.connection import get_password, get_show_bill
 from src.data_connectors import get_prods, get_trans, get_users
+from src.tables.user_table import init
 from app import app
 
-PASSWORD = get_password()
-SHOW_BILL = get_show_bill()
-
-prods = get_prods()
-trans = get_trans()
-users = get_users()
+users_init = init()
 
 
 def user_settings_layout():
@@ -45,7 +41,7 @@ def user_settings_layout():
                             [
                                 dash_table.DataTable(
                                     id="user_table",
-                                    data=users.to_dict(orient="records"),
+                                    data=get_users().to_dict(orient="records"),
                                     row_deletable=True,
                                 )
                             ],
@@ -82,7 +78,7 @@ def product_settings_layout():
                             [
                                 dash_table.DataTable(
                                     id="prod_table",
-                                    data=prods.to_dict(orient="records"),
+                                    data=get_prods().to_dict(orient="records"),
                                 )
                             ]
                         ),
@@ -95,7 +91,7 @@ def product_settings_layout():
             update_stock_modal(),
             dcc.Store(
                 id="waste_value",
-                data=0 if len(users) == 0 else get_waste() / len(users),
+                data=0 if len(get_users()) == 0 else get_waste() / len(get_users()),
             ),
         ]
     )
@@ -124,7 +120,7 @@ def transaction_settings_layout():
                             [
                                 dash_table.DataTable(
                                     id="trans_table",
-                                    data=trans.to_dict(
+                                    data=get_trans().to_dict(
                                         orient="records"
                                     ),  # [['barcode_user', 'user', 'product', 'price', 'timestamp']].to_dict(orient="records"),
                                     style_table={
@@ -153,7 +149,7 @@ def transaction_settings_layout():
     return layout
 
 
-def settings_settings_layout(password, trans_path, users_path, prods_path, show_bill):
+def settings_settings_layout():
     layout = dbc.Container(
         [
             dbc.Row(
@@ -162,9 +158,9 @@ def settings_settings_layout(password, trans_path, users_path, prods_path, show_
                     dbc.Col(
                         dbc.Row(
                             [
-                                dbc.Col(html.H3("User Table Location: ")),
+                                dbc.Col(html.H3("Upload user database: ")),
                                 html.Br(),
-                                dbc.Col(get_upload("user_file", users_path)),
+                                dbc.Col(get_upload("users")),
                             ]
                         ),
                         width=12,
@@ -173,9 +169,13 @@ def settings_settings_layout(password, trans_path, users_path, prods_path, show_
                     dbc.Col(
                         dbc.Row(
                             [
-                                dbc.Col(html.H3("Transaction Table Location: ")),
+                                dbc.Col(
+                                    html.H3(
+                                        "Upload transaction database \n(not recommended): "
+                                    )
+                                ),
                                 html.Br(),
-                                dbc.Col(get_upload("trans_file", trans_path)),
+                                dbc.Col(get_upload("transactions")),
                             ]
                         ),
                         width=12,
@@ -184,9 +184,9 @@ def settings_settings_layout(password, trans_path, users_path, prods_path, show_
                     dbc.Col(
                         dbc.Row(
                             [
-                                dbc.Col(html.H3("Product Table Location: ")),
+                                dbc.Col(html.H3("Upload product database: ")),
                                 html.Br(),
-                                dbc.Col(get_upload("prods_file", prods_path)),
+                                dbc.Col(get_upload("prods")),
                             ]
                         ),
                         width=12,
@@ -199,7 +199,7 @@ def settings_settings_layout(password, trans_path, users_path, prods_path, show_
                                 html.Br(),
                                 dbc.Col(
                                     dbc.Input(
-                                        placeholder=password,
+                                        value=get_password(),
                                         id="settings_password",
                                         type="text",
                                         minLength=1,
@@ -217,7 +217,7 @@ def settings_settings_layout(password, trans_path, users_path, prods_path, show_
                                 html.Br(),
                                 dbc.Col(
                                     dbc.Switch(
-                                        id="display_bill_switch", value=show_bill
+                                        id="display_bill_switch", value=get_show_bill()
                                     )
                                 ),
                             ]
@@ -240,14 +240,25 @@ def settings_settings_layout(password, trans_path, users_path, prods_path, show_
                         width=12,
                     ),
                 ]
-            )
+            ),
+            dbc.Alert(
+                "You removed the password, if set it to OLProgram, as this is the default. Please remember this!!!",
+                color="danger",
+                id="bad_password_alert",
+                is_open=False,
+            ),
+            dbc.Alert(
+                "There was an error in the data that you uploaded, please check the input and try again",
+                color="danger",
+                id="bad_data_alert",
+                is_open=False,
+            ),
         ]
     )
     return layout
 
 
 def settings_mode_func():
-    prods_path, trans_path, users_path = get_paths()
     return dbc.Modal(
         [
             dbc.ModalHeader(html.H1("Settings")),
@@ -276,9 +287,7 @@ def settings_mode_func():
                         dcc.Tab(
                             label="Settings",
                             value="settings",
-                            children=settings_settings_layout(
-                                PASSWORD, trans_path, users_path, prods_path, SHOW_BILL
-                            ),
+                            children=settings_settings_layout(),
                             id="settings_settings",
                         ),
                     ],
@@ -351,7 +360,7 @@ def open_settings(trigger_open, trigger_close, password):
     if trigger is not None and trigger == "open_settings":
         return True
     elif trigger is not None and trigger == "confirm_password":
-        if password == PASSWORD:
+        if password == get_password():
             return False
     return no_update
 
@@ -364,7 +373,7 @@ def open_settings(trigger_open, trigger_close, password):
 )
 def open_settings(trigger, password):
     if trigger is not None and trigger > 0:
-        if password == PASSWORD:
+        if password == get_password():
             return True, ""
     return False, no_update
 
@@ -376,7 +385,6 @@ def open_settings(trigger, password):
     Input("setting_tabs", "value"),
 )
 def update_trans_table(trigger):
-    prods_path, trans_path, users_path = get_paths()
     return (
         user_settings_layout(),
         product_settings_layout(),

@@ -1,8 +1,11 @@
-from dash import Output, Input, State, callback, ctx, no_update, html
+from dash import Output, Input, State, callback, ctx, no_update, html, ALL
 import pandas as pd
 import plotly.express as px
 from src.connection import update_values
-from src.data_connectors import get_prods, get_trans, get_users
+from src.data_connectors import get_prods, get_trans, get_users, upload_values
+
+import base64
+import io
 
 
 def create_overview(plot_col):
@@ -38,14 +41,32 @@ def update_overview_graph(trans_modal_open):
 
 @callback(
     Output("update_settings", "data"),
+    Output("bad_password_alert", "is_open"),
+    Output("bad_data_alert", "is_open"),
     Input("confirm_settings", "n_clicks"),
     State("settings_password", "value"),
-    State("user_file", "value"),
-    State("trans_file", "value"),
-    State("prods_file", "value"),
+    State("display_bill_switch", "value"),
+    State({"index": ALL, "type": "database_upload"}, "contents"),
+    State({"index": ALL, "type": "database_upload"}, "id"),
 )
-def update_settings(trigger, password, user_file, trans_file, prod_file):
+def update_settings(trigger, password, show_bill, db_tables, table_ids):
     if trigger is None:
-        return None
-    update_values(password, prod_file, trans_file, user_file)
-    return None
+        return None, no_update, no_update
+    open_warning_password = False
+    if password is None or len(password) == 0:
+        open_warning_password = True
+        password = "OLProgram"
+    update_values(password, show_bill)
+
+    for i, table in enumerate(db_tables):
+        if table is None:
+            continue
+        _, content_string = table.split(",")
+        content = base64.b64decode(content_string)
+        df = pd.read_csv(io.StringIO(content.decode("utf-8")))
+        if len(df) > 0:
+            response = upload_values(df, table_ids[i]["index"])
+            open_warning_data = False if response == "success" else True
+            print(response)
+
+    return None, open_warning_password, open_warning_data

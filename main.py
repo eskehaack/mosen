@@ -8,6 +8,6 @@ app.layout = layout_func
 # app.layout=html.H1("test")
 
 # Run the app
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Running....")
-    app.run(debug=False)
+    app.run(debug=True)

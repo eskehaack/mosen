@@ -103,14 +103,14 @@ def update_stock_modal():
             [
                 dbc.Col(dcc.Input(placeholder=p["name"], disabled=True)),
                 html.Br(),
-                dbc.Col(dcc.Input(placeholder=p["initial stock"], disabled=True)),
+                dbc.Col(dcc.Input(placeholder=p["initial_stock"], disabled=True)),
                 html.Br(),
                 dbc.Col(
                     dcc.Input(
-                        value=p["current stock"],
+                        value=p["current_stock"],
                         id={"type": "new_stock_inp", "index": f'{p["name"]}'},
                         type="number",
-                        max=p["initial stock"],
+                        max=p["initial_stock"],
                     )
                 ),
             ]

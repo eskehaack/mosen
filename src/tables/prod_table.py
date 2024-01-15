@@ -1,13 +1,13 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL, MATCH, no_update
-from src.data_connectors import get_users, get_prods, get_trans
+from src.data_connectors import get_users, get_prods, get_trans, upload_values
 
 
 def get_waste():
     prods = get_prods()
     waste = sum(
         [
-            (p["initial stock"] - p["current stock"]) * p["price"]
+            (p["initial_stock"] - p["current_stock"]) * p["price"]
             for _, p in prods.iterrows()
         ]
     )
@@ -87,21 +87,20 @@ def validate_barcode_user(value, data):
     Input("open_update_stock", "n_clicks"),
     Input("confirm_new_stock", "n_clicks"),
     State({"type": "new_stock_inp", "index": ALL}, "value"),
-    State("prods_file", "value"),
-    State("user_file", "value"),
 )
-def open_stock(trigger_open, trigger_close, inps, prods_file, user_file):
+def open_stock(trigger_open, trigger_close, inps):
     trigger = ctx.triggered_id
     if trigger == "open_update_stock":
         return True, no_update
     if trigger == "confirm_new_stock":
-        prods = get_prods(prods_file)
+        prods = get_prods()
         prods["current stock"] = list(inps)
         prods["waste"] = [
             ((p["initial stock"] - p["current stock"]) - p["sold"]) * p["price"]
             for _, p in prods.iterrows()
         ]
-        prods.to_csv(prods_file, index=False)
+        # TODO
+        upload_values(prods, "prods")
 
         n_users = len(get_users())
         general_waste = sum(prods["waste"]) / n_users
