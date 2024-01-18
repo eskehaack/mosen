@@ -42,4 +42,4 @@ def export_payments(trigger):
 
 def get_currently_sold(prod: str, initial_stock: str):
     trans = get_trans()
-    return initial_stock - len(trans[trans["product"] == prod])
+    return initial_stock - len(trans[trans["product"] == prod["name"]])

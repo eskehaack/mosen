@@ -9,8 +9,8 @@ def get_waste():
     waste = sum(
         [
             (
-                (p["initial stock"] - p["current stock"])
-                - get_currently_sold(prod=p, initial_stock=p["initial stock"])
+                (p["initial_stock"] - p["current_stock"])
+                - get_currently_sold(prod=p, initial_stock=p["initial_stock"])
             )
             * p["price"]
             for _, p in prods.iterrows()

@@ -49,7 +49,7 @@ def new_user_modal():
     return mdl
 
 
-PROD_COLS = ["price", "category", "current stock", "initial stock"]
+PROD_COLS = ["price", "category", "current_stock", "initial_stock"]
 
 prod_body = [
     dbc.Input(

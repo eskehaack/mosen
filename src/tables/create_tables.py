@@ -23,7 +23,7 @@ tables = {
             price varchar(255),
             category varchar(255),
             current_stock varchar(255),
-            initial_stock varchar(255),
+            initial_stock varchar(255)
         )
     """,
     "transactions": """
