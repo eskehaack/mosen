@@ -1,4 +1,4 @@
-from dash import Output, Input, State, callback, ctx, no_update, html, ALL
+from dash import Output, Input, State, callback, ctx, no_update, html, ALL, MATCH
 import pandas as pd
 import plotly.express as px
 from src.connection import update_values
@@ -72,45 +72,15 @@ def update_settings(trigger, password, show_bill, db_tables, table_ids):
 
 
 @callback(
-    Output("user_upload_text", "children"),
-    Input({"index": "users", "type": "database_upload"}, "filename"),
+    Output({"index": MATCH, "type": "show_upload_file"}, "children"),
+    Input({"index": MATCH, "type": "database_upload"}, "filename"),
     Input("confirm_settings", "n_clicks"),
 )
-def show_new_users(user_file, confirm):
+def show_new_upload(file, confirm):
     trigger = ctx.triggered_id
     if trigger == "confirm_settings":
         return ""
-    if user_file is not None and len(user_file) > 0:
-        return str(user_file)
-    else:
-        return no_update
-
-
-@callback(
-    Output("transactions_upload_text", "children"),
-    Input({"index": "transactions", "type": "database_upload"}, "filename"),
-    Input("confirm_settings", "n_clicks"),
-)
-def show_new_users(trans_file, confirm):
-    trigger = ctx.triggered_id
-    if trigger == "confirm_settings":
-        return ""
-    if trans_file is not None and len(trans_file) > 0:
-        return str(trans_file)
-    else:
-        return no_update
-
-
-@callback(
-    Output("prods_upload_text", "children"),
-    Input({"index": "prods", "type": "database_upload"}, "filename"),
-    Input("confirm_settings", "n_clicks"),
-)
-def show_new_users(prods_file, confirm):
-    trigger = ctx.triggered_id
-    if trigger == "confirm_settings":
-        return ""
-    if prods_file is not None and len(prods_file) > 0:
-        return str(prods_file)
+    if file is not None and len(file) > 0:
+        return str(file)
     else:
         return no_update

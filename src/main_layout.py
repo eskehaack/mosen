@@ -32,6 +32,8 @@ def user_settings_layout():
                         html.Div(
                             [
                                 dbc.Button("Create new user", id="new_user_btn"),
+                                html.Hr(),
+                                dbc.Button("Download users", id="download_users_btn"),
                             ],
                         ),
                         width=3,
@@ -158,7 +160,14 @@ def settings_settings_layout():
                                 html.Br(),
                                 dbc.Col(get_upload("users")),
                                 html.Br(),
-                                dbc.Col(html.P(id="user_upload_text")),
+                                dbc.Col(
+                                    html.P(
+                                        id={
+                                            "index": "users",
+                                            "type": "show_upload_file",
+                                        }
+                                    )
+                                ),
                             ]
                         ),
                         width=12,
@@ -171,7 +180,14 @@ def settings_settings_layout():
                                 html.Br(),
                                 dbc.Col(get_upload("prods")),
                                 html.Br(),
-                                dbc.Col(html.P(id="prods_upload_text")),
+                                dbc.Col(
+                                    html.P(
+                                        id={
+                                            "index": "prods",
+                                            "type": "show_upload_file",
+                                        }
+                                    )
+                                ),
                             ]
                         ),
                         width=12,
@@ -188,7 +204,14 @@ def settings_settings_layout():
                                 html.Br(),
                                 dbc.Col(get_upload("transactions")),
                                 html.Br(),
-                                dbc.Col(html.P(id="transaction_upload_text")),
+                                dbc.Col(
+                                    html.P(
+                                        id={
+                                            "index": "transactions",
+                                            "type": "show_upload_file",
+                                        }
+                                    )
+                                ),
                             ]
                         ),
                         width=12,
