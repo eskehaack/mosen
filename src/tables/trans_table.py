@@ -38,3 +38,8 @@ def export_payments(trigger):
         data = pd.DataFrame(data).to_csv("./data/payments.csv")
 
     return None
+
+
+def get_currently_sold(prod: str, initial_stock: str):
+    trans = get_trans()
+    return initial_stock - len(trans[trans["product"] == prod])

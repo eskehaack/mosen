@@ -25,7 +25,6 @@ tables = {
             current_stock varchar(255),
             initial_stock varchar(255),
             waste varchar(255),
-            sold varchar(255)
         )
     """,
     "transactions": """

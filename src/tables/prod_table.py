@@ -1,13 +1,18 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL, MATCH, no_update
 from src.data_connectors import get_users, get_prods, get_trans, upload_values
+from src.tables.trans_table import get_currently_sold
 
 
 def get_waste():
     prods = get_prods()
     waste = sum(
         [
-            (int(p["initial_stock"]) - int(p["current_stock"])) * int(p["price"])
+            (
+                (p["initial stock"] - p["current stock"])
+                - get_currently_sold(prod=p, initial_stock=p["initial stock"])
+            )
+            * p["price"]
             for _, p in prods.iterrows()
         ]
     )
@@ -64,7 +69,6 @@ def add_row(n_clicks, stock_trigger, vals, ids):
     if n_clicks is not None and n_clicks > 0:
         data.append({c: vals[i] for i, c in enumerate(columns)})
         data[-1]["waste"] = 0
-        data[-1]["sold"] = 0
     upload_values(data, "prods")
     return data
 
@@ -96,11 +100,6 @@ def open_stock(trigger_open, trigger_close, inps):
     if trigger == "confirm_new_stock":
         prods = get_prods()
         prods["current stock"] = list(inps)
-        prods["waste"] = [
-            ((p["initial stock"] - p["current stock"]) - p["sold"]) * p["price"]
-            for _, p in prods.iterrows()
-        ]
-        # TODO
         upload_values(prods, "prods")
 
         n_users = len(get_users())
