@@ -5,3 +5,7 @@ TO DO LIST
  - [ ] Make sure that the app can start itself (for the fist time). Can it make the db itself?
  - [ ] Find a way to display the app, perhaps tkinter.
  - [ ] Check if there is a way to make the app uncloseable.
+ - [ ] Fix databasestruktur til at være uafhængig af hinanden (hvis man fjerne en user skal det ikke øldelægge de andre databaser)
+ - [ ] Mulighed for at fjerne enkelte rækker i de forskellige databaser (muligvis bare ved download og upload)
+ - [ ] Mulighed for at downloade databaser som csv (eller excel)
+ 
