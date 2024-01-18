@@ -68,7 +68,6 @@ def add_row(n_clicks, stock_trigger, vals, ids):
         columns = [inp["index"].split("_")[1] for inp in ids]
     if n_clicks is not None and n_clicks > 0:
         data.append({c: vals[i] for i, c in enumerate(columns)})
-        data[-1]["waste"] = 0
     upload_values(data, "prods")
     return data
 
@@ -88,7 +87,6 @@ def validate_barcode_user(value, data):
 
 @callback(
     Output("new_stock_modal", "is_open"),
-    Output("waste_value", "data"),
     Input("open_update_stock", "n_clicks"),
     Input("confirm_new_stock", "n_clicks"),
     State({"type": "new_stock_inp", "index": ALL}, "value"),
@@ -99,10 +97,9 @@ def open_stock(trigger_open, trigger_close, inps):
         return True, no_update
     if trigger == "confirm_new_stock":
         prods = get_prods()
-        prods["current stock"] = list(inps)
+        prods["current_stock"] = list(inps)
         upload_values(prods, "prods")
 
         n_users = len(get_users())
-        general_waste = sum(prods["waste"]) / n_users
-        return False, general_waste
-    return no_update, no_update
+        return False
+    return no_update

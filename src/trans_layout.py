@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+from src.tables.prod_table import get_waste
 from src.data_connectors import (
     get_prods,
     get_trans,
@@ -187,13 +188,13 @@ def new_trans(trigger, barcode, user_barcode):
     Output("new_trans_user", "children"),
     Input("new_trans_inp", "n_submit"),
     State("new_trans_inp", "value"),
-    State("waste_value", "data"),
     State("display_bill_switch", "value"),
 )
-def show_balance(trigger, user_id, user_waste, display_bill_switch):
+def show_balance(trigger, user_id, display_bill_switch):
     if trigger is not None and display_bill_switch:
         trans = get_trans()
         users = get_prods()
+        user_waste = get_waste() / len(users)
         try:
             user = str(users[users["barcode"] == int(user_id)]["name"][0])
         except:

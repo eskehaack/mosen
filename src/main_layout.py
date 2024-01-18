@@ -89,10 +89,6 @@ def product_settings_layout():
             ),
             new_prod_modal(),
             update_stock_modal(),
-            dcc.Store(
-                id="waste_value",
-                data=0 if len(get_users()) == 0 else get_waste() / len(get_users()),
-            ),
         ]
     )
     return layout

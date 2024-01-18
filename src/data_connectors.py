@@ -18,7 +18,6 @@ def get_prods():
         "category",
         "current_stock",
         "initial_stock",
-        "waste",
     ]
     if len(data) == 0:
         data = pd.DataFrame(columns=cols)
