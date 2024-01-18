@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 from src.connection import update_values
 from src.data_connectors import get_prods, get_trans, get_users, upload_values
+from src.tables.prod_table import get_waste
+from src.tables.trans_table import get_income
 
 import base64
 import io
@@ -102,3 +104,36 @@ def download_tables(trigger):
     trigger = trigger["index"]
     data = data_translation[trigger]().to_csv
     return dcc.send_data_frame(data, filename=f"{trigger}_data.csv", index=False)
+
+
+@callback(
+    Output("payments_modal", "is_open"),
+    Output("payments_download", "data"),
+    Input("export_payments_btn", "n_clicks"),
+    Input("confirm_payments", "n_clicks"),
+    State("added_amount_inp", "value"),
+    State("up_down_dd", "value"),
+    State("round_dd", "value"),
+)
+def control_payments_modal(open_trigger, close_trigger, added_value, up_down, round):
+    trigger = ctx.triggered_id
+    if trigger == "export_payments_btn":
+        return True, no_update
+    elif trigger == "confirm_payments":
+        waste = get_waste()
+        income = pd.DataFrame(get_income())
+        income["price"] += float(waste) / len(income)
+        income["price"] += float(added_value) / len(income)
+        if int(round) != 0:
+            if up_down == "Nearest":
+                rounding = lambda x: int(round * round(float(x) / round))
+            elif up_down == "Up":
+                rounding = lambda x: float(x) + round - (float(x) % round)
+            else:
+                rounding = lambda x: float(x) - (float(x) % round)
+            income["price"] = income["price"].apply(rounding)
+        return False, dcc.send_data_frame(
+            income.to_csv, filename="swamp_machine_payments.csv", index=False
+        )
+    else:
+        return no_update, no_update

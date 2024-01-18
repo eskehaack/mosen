@@ -169,3 +169,66 @@ def password_modal():
         id="password_modal",
     )
     return mdl
+
+
+def export_payments_modal():
+    mdl = dbc.Modal(
+        [
+            dbc.ModalHeader("Export Payments"),
+            dbc.ModalBody(
+                [
+                    dbc.Col(
+                        [
+                            dbc.Row(
+                                [
+                                    dbc.Col(html.P("Add income: "), width=8),
+                                    dbc.Col(
+                                        dbc.Input(
+                                            id="added_amount_inp",
+                                            value=0,
+                                            min=0,
+                                            type="numerical",
+                                        ),
+                                        width=4,
+                                    ),
+                                ]
+                            ),
+                            html.Hr(),
+                            dbc.Row(
+                                [
+                                    dbc.Col(html.P("Round"), width=2),
+                                    dbc.Col(
+                                        dcc.Dropdown(
+                                            ["Up", "Down", "Nearest"],
+                                            value="Up",
+                                            clearable=False,
+                                            multi=False,
+                                            id="up_down_dd",
+                                        ),
+                                        width=3,
+                                    ),
+                                    dbc.Col(html.P("to nearest: "), width=3),
+                                    dbc.Col(
+                                        dcc.Dropdown(
+                                            [0, 1, 2, 5, 10],
+                                            value=0,
+                                            clearable=False,
+                                            multi=False,
+                                            id="round_dd",
+                                        ),
+                                        width=4,
+                                    ),
+                                ]
+                            ),
+                        ]
+                    ),
+                ]
+            ),
+            dbc.ModalFooter(
+                dbc.Row([dbc.Col(dbc.Button("Confirm", id="confirm_payments"))])
+            ),
+        ],
+        size="md",
+        id="payments_modal",
+    )
+    return mdl

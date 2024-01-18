@@ -11,6 +11,7 @@ from src.modals import (
     new_prod_modal,
     update_stock_modal,
     password_modal,
+    export_payments_modal,
 )
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
@@ -134,7 +135,7 @@ def transaction_settings_layout():
                                 html.Hr(),
                                 html.P(f"Total waste generated: {get_waste()}"),
                                 html.Hr(),
-                                dbc.Button("Export payments", id="export_payments"),
+                                dbc.Button("Export payments", id="export_payments_btn"),
                                 html.Hr(),
                                 dbc.Button(
                                     "Download Raw Transactions",
@@ -182,6 +183,8 @@ def transaction_settings_layout():
                 ]
             ),
             dcc.Store(id="placeholder_for_empty_output"),
+            export_payments_modal(),
+            dcc.Download(id="payments_download"),
         ],
     )
     return layout

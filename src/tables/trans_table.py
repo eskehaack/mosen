@@ -14,32 +14,24 @@ def get_income():
     trans = get_trans()
     users = get_users()
     user_income = list()
-    for user in set(trans["barcode_user"]):
-        user_row = users[users["barcode"] == int(user)]
+    if len(trans) > 0:
+        price = lambda x: sum(map(int, trans[trans["barcode_user"] == str(x)]["price"]))
+    else:
+        price = lambda x: 0
+    for _, user_row in users.iterrows():
+        barcode = str(user_row["barcode"])
         user_income.append(
             {
-                "barcode": user,
-                "name": str(user_row["name"][0]),
-                "rank": str(user_row["rank"][0]),
-                "team": str(user_row["team"][0]),
-                "price": sum(list(trans[trans["barcode_user"] == int(user)]["price"])),
+                "barcode": barcode,
+                "name": str(user_row["name"]),
+                "rank": str(user_row["rank"]),
+                "team": str(user_row["team"]),
+                "price": price(barcode),
             }
         )
     return user_income
 
 
-@callback(
-    Output("placeholder_for_empty_output", "data"),
-    Input("export_payments", "n_clicks"),
-)
-def export_payments(trigger):
-    if trigger is not None and trigger > 0:
-        data = get_income()
-        data = pd.DataFrame(data).to_csv("./data/payments.csv")
-
-    return None
-
-
 def get_currently_sold(prod: str, initial_stock: str):
     trans = get_trans()
-    return initial_stock - len(trans[trans["product"] == prod["name"]])
+    return len(trans[trans["product"] == prod["name"]])
