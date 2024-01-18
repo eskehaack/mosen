@@ -1,4 +1,4 @@
-from dash import Output, Input, State, callback, ctx, no_update, html, ALL, MATCH
+from dash import Output, Input, State, callback, ctx, no_update, html, ALL, MATCH, dcc
 import pandas as pd
 import plotly.express as px
 from src.connection import update_values
@@ -84,3 +84,21 @@ def show_new_upload(file, confirm):
         return str(file)
     else:
         return no_update
+
+
+@callback(
+    Output({"index": MATCH, "type": "download_trigger"}, "data"),
+    Input({"index": MATCH, "type": "download_trigger_btn"}, "n_clicks"),
+)
+def download_tables(trigger):
+    trigger = ctx.triggered_id
+    if trigger is None:
+        return no_update
+    data_translation = {
+        "users": get_users,
+        "prods": get_prods,
+        "transactions": get_trans,
+    }
+    trigger = trigger["index"]
+    data = data_translation[trigger]().to_csv
+    return dcc.send_data_frame(data, filename=f"{trigger}_data.csv", index=False)

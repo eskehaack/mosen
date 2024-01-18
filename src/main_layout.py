@@ -33,7 +33,19 @@ def user_settings_layout():
                             [
                                 dbc.Button("Create new user", id="new_user_btn"),
                                 html.Hr(),
-                                dbc.Button("Download users", id="download_users_btn"),
+                                dbc.Button(
+                                    "Download users",
+                                    id={
+                                        "index": "users",
+                                        "type": "download_trigger_btn",
+                                    },
+                                ),
+                                dcc.Download(
+                                    id={
+                                        "index": "users",
+                                        "type": "download_trigger",
+                                    }
+                                ),
                             ],
                         ),
                         width=3,
@@ -71,6 +83,20 @@ def product_settings_layout():
                                 dbc.Button("Create new product", id="new_prod_btn"),
                                 html.Hr(),
                                 dbc.Button("Update stock", id="open_update_stock"),
+                                html.Hr(),
+                                dbc.Button(
+                                    "Download Products",
+                                    id={
+                                        "index": "prods",
+                                        "type": "download_trigger_btn",
+                                    },
+                                ),
+                                dcc.Download(
+                                    id={
+                                        "index": "prods",
+                                        "type": "download_trigger",
+                                    }
+                                ),
                             ]
                         ),
                         width=3,
@@ -109,6 +135,20 @@ def transaction_settings_layout():
                                 html.P(f"Total waste generated: {get_waste()}"),
                                 html.Hr(),
                                 dbc.Button("Export payments", id="export_payments"),
+                                html.Hr(),
+                                dbc.Button(
+                                    "Download Raw Transactions",
+                                    id={
+                                        "index": "transactions",
+                                        "type": "download_trigger_btn",
+                                    },
+                                ),
+                                dcc.Download(
+                                    id={
+                                        "index": "transactions",
+                                        "type": "download_trigger",
+                                    }
+                                ),
                             ]
                         ),
                         width=3,
