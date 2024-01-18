@@ -157,6 +157,21 @@ def settings_settings_layout():
                                 dbc.Col(html.H3("Upload user database: ")),
                                 html.Br(),
                                 dbc.Col(get_upload("users")),
+                                html.Br(),
+                                dbc.Col(html.P(id="user_upload_text")),
+                            ]
+                        ),
+                        width=12,
+                    ),
+                    html.Hr(),
+                    dbc.Col(
+                        dbc.Row(
+                            [
+                                dbc.Col(html.H3("Upload product database: ")),
+                                html.Br(),
+                                dbc.Col(get_upload("prods")),
+                                html.Br(),
+                                dbc.Col(html.P(id="prods_upload_text")),
                             ]
                         ),
                         width=12,
@@ -172,17 +187,8 @@ def settings_settings_layout():
                                 ),
                                 html.Br(),
                                 dbc.Col(get_upload("transactions")),
-                            ]
-                        ),
-                        width=12,
-                    ),
-                    html.Hr(),
-                    dbc.Col(
-                        dbc.Row(
-                            [
-                                dbc.Col(html.H3("Upload product database: ")),
                                 html.Br(),
-                                dbc.Col(get_upload("prods")),
+                                dbc.Col(html.P(id="transaction_upload_text")),
                             ]
                         ),
                         width=12,

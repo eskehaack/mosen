@@ -69,3 +69,48 @@ def update_settings(trigger, password, show_bill, db_tables, table_ids):
             open_warning_data = False if response == "success" else True
 
     return None, open_warning_password, open_warning_data
+
+
+@callback(
+    Output("user_upload_text", "children"),
+    Input({"index": "users", "type": "database_upload"}, "filename"),
+    Input("confirm_settings", "n_clicks"),
+)
+def show_new_users(user_file, confirm):
+    trigger = ctx.triggered_id
+    if trigger == "confirm_settings":
+        return ""
+    if user_file is not None and len(user_file) > 0:
+        return str(user_file)
+    else:
+        return no_update
+
+
+@callback(
+    Output("transactions_upload_text", "children"),
+    Input({"index": "transactions", "type": "database_upload"}, "filename"),
+    Input("confirm_settings", "n_clicks"),
+)
+def show_new_users(trans_file, confirm):
+    trigger = ctx.triggered_id
+    if trigger == "confirm_settings":
+        return ""
+    if trans_file is not None and len(trans_file) > 0:
+        return str(trans_file)
+    else:
+        return no_update
+
+
+@callback(
+    Output("prods_upload_text", "children"),
+    Input({"index": "prods", "type": "database_upload"}, "filename"),
+    Input("confirm_settings", "n_clicks"),
+)
+def show_new_users(prods_file, confirm):
+    trigger = ctx.triggered_id
+    if trigger == "confirm_settings":
+        return ""
+    if prods_file is not None and len(prods_file) > 0:
+        return str(prods_file)
+    else:
+        return no_update
