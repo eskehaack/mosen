@@ -34,9 +34,10 @@ def open_user_modal(new_user, confirm, cancel, data):
     Output("confirm_user", "disabled"),
     Input({"type": "user_input", "index": ALL}, "value"),
     State({"type": "user_input", "index": ALL}, "id"),
+    State({"type": "user_input", "index": f"inp_barcode_user"}, "invalid"),
 )
-def enable_confirm(inps, ids):
-    if None not in inps:
+def enable_confirm(inps, ids, invalid_barcode):
+    if None not in inps or invalid_barcode:
         return False
     return True
 
