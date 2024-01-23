@@ -28,7 +28,8 @@ def trans_modal():
                         ]
                     ),
                     width=12,
-                )
+                ),
+                close_button=False,
             ),
             dbc.ModalBody(
                 dbc.Col(
@@ -41,7 +42,10 @@ def trans_modal():
                                     )
                                 ),
                                 dbc.Col(
-                                    children=dcc.Graph(id="trans_graph"),
+                                    children=dcc.Graph(
+                                        id="trans_graph",
+                                        config={"displayModeBar": False},
+                                    ),
                                     id="prod_barchart",
                                 ),
                             ]
@@ -63,6 +67,7 @@ def trans_modal():
         is_open=False,
         id="new_trans_modal",
         fullscreen=True,
+        keyboard=False,
     )
     return modal
 
