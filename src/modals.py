@@ -187,7 +187,7 @@ def export_payments_modal():
                                             id="added_amount_inp",
                                             value=0,
                                             min=0,
-                                            type="numerical",
+                                            type="number",
                                         ),
                                         width=4,
                                     ),
@@ -241,7 +241,7 @@ def export_barcodes_mdl():
             dbc.ModalBody(
                 [
                     html.P("Number of guest barcodes:"),
-                    dbc.Input(id="guest_barcodes_inp", type="Numerical", value=10),
+                    dbc.Input(id="guest_barcodes_inp", type="number", value=10),
                 ]
             ),
             dbc.ModalFooter(dbc.Button("Confirm", id="confirm_export_barcodes")),

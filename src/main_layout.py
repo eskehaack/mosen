@@ -424,6 +424,7 @@ def layout_func():
                 id="bad_barcode_alert",
                 is_open=False,
             ),
+            dcc.Store(id="retain_focus_main", data=None),
         ]
     )
 
