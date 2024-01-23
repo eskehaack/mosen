@@ -12,26 +12,34 @@ app = dash.Dash(
 
 app.clientside_callback(
     """
-    function() {
-        console.log("Client side callback triggered");
-        document.getElementById("prod_barcode").focus();
+    function(trig, newT, settings) {
+        if (newT && !settings) {
+            console.log("Prod focus");
+            document.getElementById("prod_barcode").focus();
+        }
         return;
     }
     """,
-    dash.Output("retain_focus_main", "data", allow_duplicate=True),
+    dash.Output("retain_focus_prod", "data"),
     dash.Input("prod_barcode", "n_blur"),
+    dash.State("new_trans_modal", "is_open"),
+    dash.State("settings_modal", "is_open"),
     prevent_initial_call=True,
 )
 
 app.clientside_callback(
     """
-    function() {
-        console.log("Client side callback triggered");
-        document.getElementById("new_trans_inp").focus();
-        return;
+    function(trig, newT, settings) {
+        if (!newT && !settings) {
+            console.log("Main focus");
+            document.getElementById("new_trans_inp").focus();
+            return;
+        }
     }
     """,
-    dash.Output("retain_focus_main", "data", allow_duplicate=True),
+    dash.Output("retain_focus_main", "data"),
     dash.Input("new_trans_inp", "n_blur"),
+    dash.State("new_trans_modal", "is_open"),
+    dash.State("settings_modal", "is_open"),
     prevent_initial_call=True,
 )
