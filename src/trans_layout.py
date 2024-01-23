@@ -5,6 +5,7 @@ import plotly.express as px
 from datetime import datetime
 from src.tables.prod_table import get_waste
 from src.components import get_barcode
+from src.connection import get_show_bill
 from src.data_connectors import (
     get_prods,
     get_trans,
@@ -77,10 +78,10 @@ def get_transactions(trigger, barcode):
     users = get_users()
     prods = get_prods()
     barcode = get_barcode(barcode)
-    user_barcodes = list(users["barcode"])
-    if not (trigger is not None and int(barcode) in user_barcodes):
-        return no_update
-    user_trans = transactions[transactions["barcode_user"] == int(barcode)]
+    user_barcodes = list(map(str, users["barcode"]))
+    if not (trigger is not None and str(barcode) in user_barcodes):
+        return no_update, no_update
+    user_trans = transactions[transactions["barcode_user"] == str(barcode)]
     trans_data = [
         {
             p: sum(
@@ -193,18 +194,19 @@ def new_trans(trigger, barcode, user_barcode):
     Output("new_trans_user", "children"),
     Input("new_trans_inp", "n_submit"),
     State("new_trans_inp", "value"),
-    State("display_bill_switch", "value"),
 )
-def show_balance(trigger, user_id, display_bill_switch):
-    if trigger is not None and display_bill_switch:
+def show_balance(trigger, user_id):
+    if trigger is not None and get_show_bill():
         trans = get_trans()
-        users = get_prods()
+        users = get_users()
         user_waste = get_waste() / len(users)
         user_id = get_barcode(user_id)
         try:
             user = str(users[users["barcode"] == int(user_id)]["name"][0])
         except:
             return no_update
-        user_balance = sum(trans[trans["barcode_user"] == int(user_id)]["price"])
+        user_balance = sum(
+            map(int, trans[trans["barcode_user"] == str(user_id)]["price"])
+        )
         return f"{user} - Current bill is: {user_balance} DKK and: {user_waste} DKK in waste."
     return no_update

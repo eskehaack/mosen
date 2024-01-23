@@ -9,6 +9,6 @@ def get_upload(id: str):
 
 
 def get_barcode(barcode):
-    if barcode is None:
+    if barcode is None or barcode == "":
         return barcode
     return str(int(barcode))

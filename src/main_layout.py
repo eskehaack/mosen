@@ -425,6 +425,7 @@ def layout_func():
                 is_open=False,
             ),
             dcc.Store(id="retain_focus_main", data=None),
+            dcc.Store(id="retain_focus_prod", data=None),
         ]
     )
 
