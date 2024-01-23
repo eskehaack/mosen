@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 from src.tables.prod_table import get_waste
+from src.components import get_barcode
 from src.data_connectors import (
     get_prods,
     get_trans,
@@ -75,7 +76,7 @@ def get_transactions(trigger, barcode):
     transactions = get_trans()
     users = get_users()
     prods = get_prods()
-    barcode = str(int(barcode))
+    barcode = get_barcode(barcode)
     user_barcodes = list(users["barcode"])
     if not (trigger is not None and int(barcode) in user_barcodes):
         return no_update
@@ -107,8 +108,8 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
     prods = get_prods()
     transactions = get_trans()
     current = get_current_trans()
-    barcode_open = str(int(barcode_open))
-    barcode_close = str(int(barcode_close))
+    barcode_open = get_barcode(barcode_open)
+    barcode_close = get_barcode(barcode_close)
     user_barcodes = list(users["barcode"])
     trigger = ctx.triggered_id
     if trigger == "new_trans_inp":
@@ -157,8 +158,8 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
 def new_trans(trigger, barcode, user_barcode):
     prods = get_prods()
     current = get_current_trans()
-    barcode = str(int(barcode))
-    user_barcode = str(int(user_barcode))
+    barcode = get_barcode(barcode)
+    user_barcode = get_barcode(user_barcode)
     if barcode == user_barcode:
         return (
             [html.H1("Products: ")],
@@ -199,7 +200,7 @@ def show_balance(trigger, user_id, display_bill_switch):
         trans = get_trans()
         users = get_prods()
         user_waste = get_waste() / len(users)
-        user_id = str(int(user_id))
+        user_id = get_barcode(user_id)
         try:
             user = str(users[users["barcode"] == int(user_id)]["name"][0])
         except:
