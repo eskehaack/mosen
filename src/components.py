@@ -6,3 +6,9 @@ def get_upload(id: str):
         ["Drag and Drop or ", html.A("Select a File")],
         id={"index": id, "type": "database_upload"},
     )
+
+
+def get_barcode(barcode):
+    if barcode is None:
+        return barcode
+    return str(int(barcode))
