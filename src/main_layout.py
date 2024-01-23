@@ -12,6 +12,7 @@ from src.modals import (
     update_stock_modal,
     password_modal,
     export_payments_modal,
+    export_barcodes_mdl,
 )
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
@@ -296,7 +297,12 @@ def settings_settings_layout():
                     dbc.Col(
                         dbc.Row(
                             [
-                                dbc.Col(width=8),
+                                dbc.Col(
+                                    dbc.Button(
+                                        "Export Barcodes", id="export_barcodes_btn"
+                                    ),
+                                    width=8,
+                                ),
                                 html.Br(),
                                 dbc.Col(
                                     dbc.Button(
@@ -321,6 +327,7 @@ def settings_settings_layout():
                 id="bad_data_alert",
                 is_open=False,
             ),
+            export_barcodes_mdl(),
         ]
     )
     return layout

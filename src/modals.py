@@ -232,3 +232,22 @@ def export_payments_modal():
         id="payments_modal",
     )
     return mdl
+
+
+def export_barcodes_mdl():
+    mdl = dbc.Modal(
+        [
+            dbc.ModalHeader("Export Barcodes"),
+            dbc.ModalBody(
+                [
+                    html.P("Number of guest barcodes:"),
+                    dbc.Input(id="guest_barcodes_inp", type="Numerical", value=10),
+                ]
+            ),
+            dbc.ModalFooter(dbc.Button("Confirm", id="confirm_export_barcodes")),
+            dcc.Store(id="pdf_download"),
+        ],
+        size="md",
+        id="export_barcodes_modal",
+    )
+    return mdl

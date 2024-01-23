@@ -5,6 +5,7 @@ from src.connection import update_values
 from src.data_connectors import get_prods, get_trans, get_users, upload_values
 from src.tables.prod_table import get_waste
 from src.tables.trans_table import get_income
+from src.barcode_generator import generate_pdf
 
 import base64
 import io
@@ -137,3 +138,38 @@ def control_payments_modal(open_trigger, close_trigger, added_value, up_down, ro
         )
     else:
         return no_update, no_update
+
+
+@callback(
+    Output("export_barcodes_modal", "is_open"),
+    Input("export_barcodes_btn", "n_clicks"),
+    Input("confirm_export_barcodes", "n_clicks"),
+)
+def open_export_barcodes(trigger_open, trigger_close):
+    trigger = ctx.triggered_id
+    if trigger == "export_barcodes_btn":
+        return True
+    elif trigger == "confirm_export_barcodes":
+        return False
+    else:
+        return no_update
+
+
+@callback(
+    Output("pdf_download", "data"),
+    Input("confirm_export_barcodes", "n_clicks"),
+    State("guest_barcodes_inp", "value"),
+)
+def export_barcodes(trigger, guest_barcodes):
+    if trigger is None:
+        return no_update
+
+    types = ["users", "prods", "guests", "multipliers"]
+    for type in types:
+        generate_pdf(
+            type=type,
+            pdf_filename=f"{type[:-1]}_barcodes.pdf",
+            number_of_guest_codes=guest_barcodes,
+        )
+
+    return no_update
