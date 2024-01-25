@@ -1,4 +1,5 @@
 import pandas as pd
+from numpy import array
 import sqlite3
 
 
@@ -75,13 +76,19 @@ def update_current_trans(data: pd.DataFrame):
         raise ValueError("Incorrect data")
 
 
-def reset_current_trans():
+def reset_table(table: str):
     con, cur = init()
-    cur.execute("DELETE FROM temporary")
+    cur.execute(f"DELETE FROM {table}")
+    print(f"Reset on {table}")
     con.commit()
 
 
+def reset_current_trans():
+    reset_table("temporary")
+
+
 def upload_values(data: list, table: str):
+    reset_table(table)
     if type(data) == pd.DataFrame:
         data = data.to_dict(orient="records")
     con, cur = init()
@@ -94,7 +101,7 @@ def upload_values(data: list, table: str):
 
     bad_rows = list()
     for row in data:
-        row, bad = validation[table](row)
+        row, bad = validation[table](row, data)
         for col, val in row.items():
             if val is None or str(val).replace(" ", "") == "":
                 row[col] = "Unkown"
@@ -111,31 +118,39 @@ def upload_values(data: list, table: str):
         return table, None
 
 
-def validate_user(data: dict):
-    users = get_users()
-    if data["barcode"] in users["barcode"]:
-        data["barcode"] = max(users["barcode"]) + 1
-    if len(str(data["barcode"])) < 4 or len(str(data["barcode"])) > 11:
+def validate_user(row: dict, data: list):
+    print(data)
+    users = pd.DataFrame(data)
+    bad = False
+    if sum(array(users["barcode"]) == row["barcode"]) > 1:
+        bad = True
+        row["barcode"] = max(users["barcode"]) + 1
+        print(row)
+    if len(str(row["barcode"])) < 4 or len(str(row["barcode"])) > 11:
+        bad = True
         for i in range(1000, 100000000000):
             if i not in users["barcode"]:
-                data["barcode"] = i
+                row["barcode"] = i
                 break
-        return data, True
-    return data, False
+        return row, bad
+    return row, bad
 
 
-def validate_prod(data: dict):
-    prods = get_prods()
-    if data["barcode"] in prods["barcode"]:
-        data["barcode"] = max(prods["barcode"]) + 1
-    if len(str(data["barcode"])) < 3 or len(str(data["barcode"])) > 3:
+def validate_prod(row: dict, data: list):
+    prods = pd.DataFrame(data)
+    bad = False
+    if sum(array(prods["barcode"]) == row["barcode"]) > 1:
+        bad = True
+        row["barcode"] = max(prods["barcode"]) + 1
+    if len(str(row["barcode"])) < 3 or len(str(row["barcode"])) > 3:
+        bad = True
         for i in range(100, 1000):
             if i not in prods["barcode"]:
-                data["barcode"] = i
+                row["barcode"] = i
                 break
-        return data, True
-    return data, False
+        return row, bad
+    return row, bad
 
 
-def validate_trans(data: dict):
-    return data, True
+def validate_trans(row: dict, data: list):
+    return row, True
