@@ -205,6 +205,7 @@ def open_bad_rows(trigger, data):
 
 @callback(
     Output("edit_data_modal", "is_open"),
+    Output("edit_modal_row", "data"),
     Input("edit_users", "n_clicks"),
     Input("edit_prods", "n_clicks"),
     Input("edit_modal_delete", "n_clicks"),
@@ -215,9 +216,52 @@ def open_edit_modal(open_user, open_prod, close_delete, close_edit):
     if trigger in ["edit_users", "edit_prods"] and any(
         [trig is not None for trig in [open_user, open_prod]]
     ):
-        return True
+        return True, trigger.split("_")[1]
     if trigger in ["edit_modal_delete", "edit_modal_edit"] and any(
         [trig is not None for trig in [close_delete, close_edit]]
     ):
-        return False
-    return no_update
+        return False, None
+    return no_update, no_update
+
+
+@callback(
+    Output("new_user_modal", "is_open", allow_duplicate=True),
+    Output("new_prod_modal", "is_open", allow_duplicate=True),
+    Output({"index": ALL, "type": "user_input"}, "value", allow_duplicate=True),
+    Output({"index": ALL, "type": "prod_input"}, "value", allow_duplicate=True),
+    Input("edit_modal_delete", "n_clicks"),
+    Input("edit_modal_edit", "n_clicks"),
+    State("edit_modal_row", "data"),
+    State("edit_input", "value"),
+    prevent_initial_call=True,
+)
+def edit_new_data_modals(delete, edit, table, barcode):
+    trigger = ctx.triggered_id
+    if trigger == "edit_modal_delete" and barcode is not None:
+        if table == "users":
+            data = get_users()
+        elif table == "prods":
+            data = get_users()
+        indecies = data[data["barcode"] == int(barcode)].index
+        data.drop(indecies, inplace=True)
+        upload_values(data, table)
+        return no_update, no_update, [no_update] * 4, [no_update] * 6
+    elif trigger == "edit_modal_edit" and barcode is not None:
+        if table == "users":
+            data = get_users()
+            row = data[data["barcode"] == int(barcode)]
+            indecies = row.index
+            data.drop(indecies, inplace=True)
+            print(data, indecies)
+            upload_values(data, table)
+            row = list(row.values[0])
+            return True, False, row, [no_update] * 6
+        if table == "prods":
+            row = data[data["barcode"] == int(barcode)]
+            indecies = row.index
+            data.drop(indecies, inplace=True)
+            upload_values(data, table)
+            row = list(row.values[0])
+            return False, True, [no_update] * 4, row
+    else:
+        return no_update, no_update, [no_update] * 4, [no_update] * 6

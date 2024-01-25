@@ -8,7 +8,7 @@ def init():
 
 
 @callback(
-    Output("new_user_modal", "is_open"),
+    Output("new_user_modal", "is_open", allow_duplicate=True),
     Output({"type": "user_input", "index": "inp_barcode_user"}, "value"),
     Input("new_user_btn", "n_clicks"),
     Input("confirm_user", "n_clicks"),
@@ -45,29 +45,26 @@ def enable_confirm(inps, ids, invalid_barcode):
 @callback(
     Output("user_table", "data"),
     Input("confirm_user", "n_clicks"),
-    State("user_table", "data"),
     State({"type": "user_input", "index": ALL}, "value"),
     State({"type": "user_input", "index": ALL}, "id"),
     prevent_initial_call=True,
 )
-def add_row(n_clicks, data, vals, ids):
-    try:
-        columns = data[0]
-    except:
-        columns = [inp["index"].split("_")[1] for inp in ids]
+def add_row(n_clicks, vals, ids):
+    data = get_users()
     if n_clicks > 0:
-        data.append({c: vals[i] for i, c in enumerate(columns)})
+        new = pd.DataFrame([{c: vals[i] for i, c in enumerate(data.columns)}])
+        data = pd.concat([data, new])
     upload_values(data, "users")
-    return data
+    return data.to_dict(orient="records")
 
 
 @callback(
     Output({"type": "user_input", "index": f"inp_barcode_user"}, "invalid"),
     Input({"type": "user_input", "index": f"inp_barcode_user"}, "value"),
-    State("user_table", "data"),
     prevent_initial_callback=True,
 )
-def validate_barcode_user(value, data):
+def validate_barcode_user(value):
+    data = get_users().to_dict(orient="records")
     bars = [row["barcode"] for row in data]
     if value in bars or value is None or type(value) != int or len(str(value)) != 4:
         return True

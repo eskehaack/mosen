@@ -20,7 +20,7 @@ def get_waste():
 
 
 @callback(
-    Output("new_prod_modal", "is_open"),
+    Output("new_prod_modal", "is_open", allow_duplicate=True),
     Output({"type": "prod_input", "index": "inp_barcode_prod"}, "value"),
     Input("new_prod_btn", "n_clicks"),
     Input("confirm_prod", "n_clicks"),
@@ -62,24 +62,21 @@ def enable_confirm(inps, invalid_barcode):
     prevent_initial_call=True,
 )
 def add_row(n_clicks, stock_trigger, vals, ids):
-    data = get_prods().to_dict(orient="records")
-    try:
-        columns = data[0]
-    except:
-        columns = [inp["index"].split("_")[1] for inp in ids]
-    if n_clicks is not None and n_clicks > 0:
-        data.append({c: vals[i] for i, c in enumerate(columns)})
+    data = get_prods()
+    if n_clicks > 0:
+        new = pd.DataFrame([{c: vals[i] for i, c in enumerate(data.columns)}])
+        data = pd.concat([data, new])
     upload_values(data, "prods")
-    return data
+    return data.to_dict(orient="records")
 
 
 @callback(
     Output({"type": "prod_input", "index": f"inp_barcode_prod"}, "invalid"),
     Input({"type": "prod_input", "index": f"inp_barcode_prod"}, "value"),
-    State("prod_table", "data"),
     prevent_initial_callback=True,
 )
-def validate_barcode_prod(value, data):
+def validate_barcode_prod(value):
+    data = get_prods().to_dict(orient="records")
     bars = [row["barcode"] for row in data]
     if value in bars or value is None or type(value) != int or len(str(value)) != 3:
         return True

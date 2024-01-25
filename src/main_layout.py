@@ -77,6 +77,7 @@ def user_settings_layout():
             ),
             new_user_modal(),
             edit_modal(),
+            dcc.Store(id="edit_modal_row"),
             dcc.Store(id={"index": "users", "type": "bad_rows"}),
         ],
     )
