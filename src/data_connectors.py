@@ -87,8 +87,8 @@ def upload_values(data: list, table: str):
     con, cur = init()
     n_cols = {"prods": 6, "transactions": 6, "users": 4}
     validation = {
-        "prods": validate_trans,
-        "transactions": validate_prod,
+        "prods": validate_prod,
+        "transactions": validate_trans,
         "users": validate_user,
     }
 
@@ -115,6 +115,11 @@ def validate_user(data: dict):
     users = get_users()
     if data["barcode"] in users["barcode"]:
         data["barcode"] = max(users["barcode"]) + 1
+    if len(str(data["barcode"])) < 4 or len(str(data["barcode"])) > 11:
+        for i in range(1000, 100000000000):
+            if i not in users["barcode"]:
+                data["barcode"] = i
+                break
         return data, True
     return data, False
 
@@ -123,9 +128,14 @@ def validate_prod(data: dict):
     prods = get_prods()
     if data["barcode"] in prods["barcode"]:
         data["barcode"] = max(prods["barcode"]) + 1
-        return True
-    return False
+    if len(str(data["barcode"])) < 3 or len(str(data["barcode"])) > 3:
+        for i in range(100, 1000):
+            if i not in prods["barcode"]:
+                data["barcode"] = i
+                break
+        return data, True
+    return data, False
 
 
 def validate_trans(data: dict):
-    return True
+    return data, True
