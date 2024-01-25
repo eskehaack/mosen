@@ -59,7 +59,7 @@ def user_settings_layout():
                                 dash_table.DataTable(
                                     id="user_table",
                                     data=get_users().to_dict(orient="records"),
-                                    row_deletable=True,
+                                    row_deletable=False,
                                 )
                             ],
                         ),
