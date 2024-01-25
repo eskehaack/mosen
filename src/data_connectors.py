@@ -32,9 +32,7 @@ def get_trans():
     data = pd.DataFrame(cur.execute("SELECT * FROM transactions"))
     cols = [
         "barcode_user",
-        "user",
         "barcode_prod",
-        "product",
         "price",
         "timestamp",
     ]
@@ -92,7 +90,7 @@ def upload_values(data: list, table: str):
     if type(data) == pd.DataFrame:
         data = data.to_dict(orient="records")
     con, cur = init()
-    n_cols = {"prods": 6, "transactions": 6, "users": 4}
+    n_cols = {"prods": 6, "transactions": 4, "users": 4}
     validation = {
         "prods": validate_prod,
         "transactions": validate_trans,
@@ -119,13 +117,11 @@ def upload_values(data: list, table: str):
 
 
 def validate_user(row: dict, data: list):
-    print(data)
     users = pd.DataFrame(data)
     bad = False
     if sum(array(users["barcode"]) == row["barcode"]) > 1:
         bad = True
         row["barcode"] = max(users["barcode"]) + 1
-        print(row)
     if len(str(row["barcode"])) < 4 or len(str(row["barcode"])) > 11:
         bad = True
         for i in range(1000, 100000000000):

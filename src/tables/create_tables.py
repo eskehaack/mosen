@@ -29,9 +29,7 @@ tables = {
     "transactions": """
         CREATE TABLE transactions (
             barcode_user varchar(255),
-            user varchar(255),
             barcode_prod varchar(255),
-            product varchar(255),
             price varchar(255),
             timestamp varchar(255)
         )

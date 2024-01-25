@@ -131,13 +131,7 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
                 [
                     {
                         "barcode_user": barcode_open,
-                        "user": str(
-                            users[users["barcode"] == int(barcode_open)]["name"].values[
-                                0
-                            ]
-                        ),
                         "barcode_prod": row["barcode_prod"],
-                        "product": row["name"],
                         "price": str(
                             prods[prods["barcode"] == int(row["barcode_prod"])][
                                 "price"
