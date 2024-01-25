@@ -1,5 +1,6 @@
 import pandas as pd
 from numpy import array
+from datetime import datetime
 import sqlite3
 
 
@@ -149,4 +150,8 @@ def validate_prod(row: dict, data: list):
 
 
 def validate_trans(row: dict, data: list):
+    try:
+        row["timestamp"] = str(datetime.strptime(row["timestamp"]))
+    except:
+        row["timestamp"] = str(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
     return row, True
