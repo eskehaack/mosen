@@ -19,18 +19,19 @@ def create_overview(plot_col):
     if len(transactions) == 0:
         return px.bar()
 
-    concatinated_dict = {row["name"]: row[plot_col] for i, row in users.iterrows()}
-    ranks = list(users[plot_col].unique())
-
-    overview_df = [0 for _ in range(len(ranks))]
-    trans_dict = {prod: 0 for prod in prods["name"]}
-    for i, rank in enumerate(ranks):
-        temp = trans_dict.copy()
-        temp["rank"] = rank
-        overview_df[i] = temp
-
-    for i, row in transactions.iterrows():
-        overview_df[ranks.index(concatinated_dict[row["user"]])][row["product"]] += 1
+    ranks = users[plot_col].unique()
+    rank_dict = {str(row["barcode"]): row[str(plot_col)] for i, row in users.iterrows()}
+    transactions["rank"] = transactions["barcode_user"].apply(
+        lambda x: rank_dict[str(x)]
+    )
+    prod_dict = {str(row["barcode"]): row["name"] for i, row in prods.iterrows()}
+    transactions["prod_names"] = transactions["barcode_prod"].apply(
+        lambda x: prod_dict[str(x)]
+    )
+    overview_df = [
+        transactions[transactions["rank"] == rank].value_counts("prod_names").to_dict()
+        for rank in ranks
+    ]
     return px.bar(overview_df, x=ranks, y=list(prods["name"]))
 
 
