@@ -201,3 +201,23 @@ def open_bad_rows(trigger, data):
         return no_update, [no_update, no_update, no_update]
     else:
         return True, data
+
+
+@callback(
+    Output("edit_data_modal", "is_open"),
+    Input("edit_users", "n_clicks"),
+    Input("edit_prods", "n_clicks"),
+    Input("edit_modal_delete", "n_clicks"),
+    Input("edit_modal_edit", "n_clicks"),
+)
+def open_edit_modal(open_user, open_prod, close_delete, close_edit):
+    trigger = ctx.triggered_id
+    if trigger in ["edit_users", "edit_prods"] and any(
+        [trig is not None for trig in [open_user, open_prod]]
+    ):
+        return True
+    if trigger in ["edit_modal_delete", "edit_modal_edit"] and any(
+        [trig is not None for trig in [close_delete, close_edit]]
+    ):
+        return False
+    return no_update

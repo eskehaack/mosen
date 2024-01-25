@@ -14,6 +14,7 @@ from src.modals import (
     export_payments_modal,
     export_barcodes_mdl,
     bad_rows_mdl,
+    edit_modal,
 )
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
@@ -43,6 +44,11 @@ def user_settings_layout():
                                         "type": "download_trigger_btn",
                                     },
                                 ),
+                                html.Hr(),
+                                dbc.Button(
+                                    "Edit users",
+                                    id="edit_users",
+                                ),
                                 dcc.Download(
                                     id={
                                         "index": "users",
@@ -70,6 +76,7 @@ def user_settings_layout():
                 style={"height": "100%"},
             ),
             new_user_modal(),
+            edit_modal(),
             dcc.Store(id={"index": "users", "type": "bad_rows"}),
         ],
     )
@@ -94,6 +101,11 @@ def product_settings_layout():
                                         "index": "prods",
                                         "type": "download_trigger_btn",
                                     },
+                                ),
+                                html.Hr(),
+                                dbc.Button(
+                                    "Edit products",
+                                    id="edit_prods",
                                 ),
                                 dcc.Download(
                                     id={

@@ -291,3 +291,30 @@ def bad_rows_mdl():
         size="lg",
     )
     return mdl
+
+
+def edit_modal():
+    mdl = dbc.Modal(
+        [
+            dbc.ModalHeader("Edit or delete data?"),
+            dbc.ModalBody(
+                [
+                    html.P("Input barcode for user/product:"),
+                    dbc.Input(id="edit_input", placeholder="Barcode"),
+                ]
+            ),
+            dbc.ModalFooter(
+                dbc.Row(
+                    [
+                        # dbc.Col(width=6),
+                        dbc.Col(dbc.Button("Delete", id="edit_modal_delete")),
+                        dbc.Col(dbc.Button("Edit", id="edit_modal_edit")),
+                    ]
+                )
+            ),
+        ],
+        id="edit_data_modal",
+        size="lg",
+        is_open=False,
+    )
+    return mdl
