@@ -32,7 +32,7 @@ def open_prod_modal(new_prod, confirm, cancel, data):
     try:
         barcode = max(pd.DataFrame(data)["barcode"]) + 1
     except:
-        barcode = 100001
+        barcode = 101
     trigger = ctx.triggered_id
     if trigger == "new_prod_btn":
         return True, barcode

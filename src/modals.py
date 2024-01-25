@@ -1,4 +1,4 @@
-from dash import html, dcc
+from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 import pandas as pd
 from src.data_connectors import get_prods, get_trans, get_users
@@ -253,5 +253,41 @@ def export_barcodes_mdl():
         ],
         size="md",
         id="export_barcodes_modal",
+    )
+    return mdl
+
+
+def bad_rows_mdl():
+    mdl = dbc.Modal(
+        [
+            dbc.ModalHeader("Bad Rows"),
+            dbc.ModalBody(
+                [
+                    html.P(
+                        "The following bad rows were detected in your upload. You can edit them manually if the below data is not what you wanted."
+                    ),
+                    html.Hr(),
+                    html.P("Users"),
+                    html.Br(),
+                    dash_table.DataTable(
+                        id={"index": "users", "type": "bad_rows_table"},
+                    ),
+                    html.Hr(),
+                    html.P("Products"),
+                    html.Br(),
+                    dash_table.DataTable(
+                        id={"index": "prods", "type": "bad_rows_table"},
+                    ),
+                    html.Hr(),
+                    html.P("Transactions"),
+                    html.Br(),
+                    dash_table.DataTable(
+                        id={"index": "transactions", "type": "bad_rows_table"},
+                    ),
+                ]
+            ),
+        ],
+        id="bad_rows_modal",
+        size="lg",
     )
     return mdl

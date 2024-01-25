@@ -13,6 +13,7 @@ from src.modals import (
     password_modal,
     export_payments_modal,
     export_barcodes_mdl,
+    bad_rows_mdl,
 )
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
@@ -69,6 +70,7 @@ def user_settings_layout():
                 style={"height": "100%"},
             ),
             new_user_modal(),
+            dcc.Store(id={"index": "users", "type": "bad_rows"}),
         ],
     )
     return layout
@@ -119,6 +121,7 @@ def product_settings_layout():
             ),
             new_prod_modal(),
             update_stock_modal(),
+            dcc.Store(id={"index": "prods", "type": "bad_rows"}),
         ]
     )
     return layout
@@ -186,6 +189,7 @@ def transaction_settings_layout():
             dcc.Store(id="placeholder_for_empty_output"),
             export_payments_modal(),
             dcc.Download(id="payments_download"),
+            dcc.Store(id={"index": "transactions", "type": "bad_rows"}),
         ],
     )
     return layout
@@ -328,6 +332,7 @@ def settings_settings_layout():
                 is_open=False,
             ),
             export_barcodes_mdl(),
+            bad_rows_mdl(),
         ]
     )
     return layout

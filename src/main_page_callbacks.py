@@ -46,6 +46,7 @@ def update_overview_graph(trans_modal_open):
     Output("update_settings", "data"),
     Output("bad_password_alert", "is_open"),
     Output("bad_data_alert", "is_open"),
+    Output({"index": ALL, "type": "bad_rows"}, "data"),
     Input("confirm_settings", "n_clicks"),
     State("settings_password", "value"),
     State("display_bill_switch", "value"),
@@ -54,13 +55,14 @@ def update_overview_graph(trans_modal_open):
 )
 def update_settings(trigger, password, show_bill, db_tables, table_ids):
     if trigger is None:
-        return None, no_update, no_update
+        return None, no_update, no_update, [no_update] * 3
     open_warning_password = False
     if password is None or len(password) == 0:
         open_warning_password = True
         password = "OLProgram"
     update_values(password, show_bill)
 
+    bad_rows_list = [[], [], []]
     for i, table in enumerate(db_tables):
         if table is None:
             continue
@@ -68,10 +70,10 @@ def update_settings(trigger, password, show_bill, db_tables, table_ids):
         content = base64.b64decode(content_string)
         df = pd.read_csv(io.StringIO(content.decode("utf-8")))
         if len(df) > 0:
-            response = upload_values(df, table_ids[i]["index"])
+            response, bad_rows = upload_values(df, table_ids[i]["index"])
             open_warning_data = False if response == "success" else True
-
-    return None, open_warning_password, open_warning_data
+            bad_rows_list[i] = bad_rows
+    return True, open_warning_password, open_warning_data, bad_rows_list
 
 
 @callback(
@@ -173,3 +175,20 @@ def export_barcodes(trigger, guest_barcodes):
         )
 
     return no_update
+
+
+@callback(
+    Output("bad_rows_modal", "is_open"),
+    Output({"index": ALL, "type": "bad_rows_table"}, "data"),
+    Input("update_settings", "data"),
+    State({"index": ALL, "type": "bad_rows"}, "data"),
+)
+def open_bad_rows(trigger, data):
+    if (
+        trigger is None
+        or all([table is None for table in data])
+        or max([len(table) for table in data]) == 0
+    ):
+        return no_update, [no_update, no_update, no_update]
+    else:
+        return True, data

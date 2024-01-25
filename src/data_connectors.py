@@ -82,12 +82,50 @@ def reset_current_trans():
 
 
 def upload_values(data: list, table: str):
+    if type(data) == pd.DataFrame:
+        data = data.to_dict(orient="records")
     con, cur = init()
     n_cols = {"prods": 6, "transactions": 6, "users": 4}
+    validation = {
+        "prods": validate_trans,
+        "transactions": validate_prod,
+        "users": validate_user,
+    }
+
+    bad_rows = list()
+    for row in data:
+        row, bad = validation[table](row)
+        for col, val in row.items():
+            if val is None or str(val).replace(" ", "") == "":
+                row[col] = "Unkown"
+                bad = True
+        if bad:
+            bad_rows.append(row)
+
     data = pd.DataFrame(data)
     if n_cols[table] == len(data.columns):
         data.to_sql(name=table, con=con, if_exists="replace", index=False)
         con.commit()
-        return "success"
+        return "success", bad_rows
     else:
-        return table
+        return table, None
+
+
+def validate_user(data: dict):
+    users = get_users()
+    if data["barcode"] in users["barcode"]:
+        data["barcode"] = max(users["barcode"]) + 1
+        return data, True
+    return data, False
+
+
+def validate_prod(data: dict):
+    prods = get_prods()
+    if data["barcode"] in prods["barcode"]:
+        data["barcode"] = max(prods["barcode"]) + 1
+        return True
+    return False
+
+
+def validate_trans(data: dict):
+    return True
