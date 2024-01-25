@@ -19,14 +19,22 @@ def create_overview(plot_col):
     if len(transactions) == 0:
         return px.bar()
 
+    def translation(x, t_dict):
+        try:
+            ret = t_dict[str(x)]
+        except:
+            ret = "UNKNOWN"
+        return ret
+
     ranks = users[plot_col].unique()
     rank_dict = {str(row["barcode"]): row[str(plot_col)] for i, row in users.iterrows()}
+
     transactions["rank"] = transactions["barcode_user"].apply(
-        lambda x: rank_dict[str(x)]
+        translation, t_dict=rank_dict
     )
     prod_dict = {str(row["barcode"]): row["name"] for i, row in prods.iterrows()}
     transactions["prod_names"] = transactions["barcode_prod"].apply(
-        lambda x: prod_dict[str(x)]
+        translation, t_dict=prod_dict
     )
     overview_df = [
         transactions[transactions["rank"] == rank].value_counts("prod_names").to_dict()
