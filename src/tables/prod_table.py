@@ -81,7 +81,7 @@ def add_row(n_clicks, stock_trigger, vals, ids):
 )
 def validate_barcode_prod(value, data):
     bars = [row["barcode"] for row in data]
-    if value in bars or value is None or type(value) != int or len(str(value)) != 6:
+    if value in bars or value is None or type(value) != int or len(str(value)) != 3:
         return True
     return False
 
