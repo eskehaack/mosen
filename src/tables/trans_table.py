@@ -34,4 +34,4 @@ def get_income():
 
 def get_currently_sold(prod: str, initial_stock: str):
     trans = get_trans()
-    return len(trans[trans["product"] == prod["name"]])
+    return len(trans[trans["barcode_prod"] == prod["barcode"]])
