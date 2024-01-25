@@ -45,9 +45,10 @@ def open_prod_modal(new_prod, confirm, cancel, data):
 @callback(
     Output("confirm_prod", "disabled"),
     Input({"type": "prod_input", "index": ALL}, "value"),
+    State({"type": "prod_input", "index": f"inp_barcode_prod"}, "invalid"),
 )
-def enable_confirm(inps):
-    if None not in inps:
+def enable_confirm(inps, invalid_barcode):
+    if None not in inps or invalid_barcode:
         return False
     return True
 
@@ -78,7 +79,7 @@ def add_row(n_clicks, stock_trigger, vals, ids):
     State("prod_table", "data"),
     prevent_initial_callback=True,
 )
-def validate_barcode_user(value, data):
+def validate_barcode_prod(value, data):
     bars = [row["barcode"] for row in data]
     if value in bars or value is None or type(value) != int or len(str(value)) != 6:
         return True
