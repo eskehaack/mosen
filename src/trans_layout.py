@@ -90,7 +90,15 @@ def get_transactions(trigger, barcode):
     trans_data = [
         {
             p: sum(
-                [1 if p == row["product"] else 0 for i, row in user_trans.iterrows()]
+                [
+                    1
+                    if p
+                    == prods[prods["barcode"] == int(row["barcode_prod"])][
+                        "name"
+                    ].values[0]
+                    else 0
+                    for i, row in user_trans.iterrows()
+                ]
             )
             for p in list(prods["name"])
         }
@@ -165,11 +173,23 @@ def new_trans(trigger, barcode, user_barcode):
             [html.H1("Products: ")],
             "",
         )
+    elif int(barcode) == 0:
+        if len(current) == 0:
+            return no_update, ""
+        last_barcode = current.iloc[len(current) - 1]["barcode_prod"]
+        indecies = current[current["barcode_prod"] == str(last_barcode)].index
+        current.drop(indecies, inplace=True)
+    elif len(barcode) < 3:
+        if len(current) == 0:
+            return no_update, ""
+        for _ in range(int(barcode)):
+            last = current.iloc[len(current) - 1]
+            data = [
+                {col: last.values[i] for i, col in enumerate(list(current.columns))}
+            ]
+            current = pd.concat([current, pd.DataFrame(data)], ignore_index=True)
     elif int(barcode) not in list(prods["barcode"]):
         return no_update, ""
-    elif len(barcode) == 2:
-        for _ in range(int(barcode)):
-            current(pd.concat([current, current[-1]]))
     else:
         try:
             product = prods[prods["barcode"] == int(barcode)]
