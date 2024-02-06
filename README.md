@@ -34,6 +34,7 @@ When you've done changes to the code, you need to "add", "commit" and "push" the
 When you've added and commit all changes run ```git push``` to "upload" all changes to the remote host (in this case github.com/eskehaack/mosen).\ 
 When you're done implementing your new feature, create a "Pull Request" in github ([here](https://github.com/eskehaack/mosen/pulls)). Once it has been reviewed, I'll merge it into main and build a new version of the app.
 
-
-
+## Building / Freezing the app
+The app is frozen / build (or whatever you want to call it) with pyinstaller.\
+Simply run ```pyinstaller -F -n "swampmachine.exe" --distpath "." --clean --icon "assets\favicon.ico" --log-level=WARN main.py```
 
