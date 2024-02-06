@@ -10,7 +10,7 @@ app = dash.Dash(
 
 # Clientside callbacks ---------
 
-app.clientside_callback(
+dash.clientside_callback(
     """
     function(trig, newT, settings, password) {
         if (newT && !settings && !password) {
@@ -28,9 +28,9 @@ app.clientside_callback(
     prevent_initial_call=True,
 )
 
-app.clientside_callback(
+dash.clientside_callback(
     """
-    function(trig, newT, settings) {
+    function(trig, newT, settings, password) {
         if (!newT && !settings && !password) {
             console.log("Main focus");
             document.getElementById("new_trans_inp").focus();

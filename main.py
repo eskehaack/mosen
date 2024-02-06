@@ -15,12 +15,20 @@ def run_my_server():
     app.run(debug=False)
 
 
+run_in_web = False
+
 # Run the app
 if __name__ == "__main__":
     print("Running....")
-    threading.Thread(target=run_my_server, daemon=True).start()
-    # app.run(debug=False)
-    webview.create_window(
-        "The Swamp Machine", "http://127.0.0.1:8050", fullscreen=True, frameless=True
-    )
-    webview.start()
+    if run_in_web:
+        app.run(debug=False)
+    else:
+        threading.Thread(target=run_my_server, daemon=True).start()
+        webview.create_window(
+            "The Swamp Machine",
+            "http://127.0.0.1:8050",
+            fullscreen=True,
+            frameless=True,
+            easy_drag=False,
+        )
+        webview.start()
