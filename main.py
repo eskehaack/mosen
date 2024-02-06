@@ -30,5 +30,6 @@ if __name__ == "__main__":
             fullscreen=True,
             frameless=True,
             easy_drag=False,
+            on_top=True,
         )
         webview.start()
