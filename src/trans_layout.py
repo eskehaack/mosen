@@ -91,12 +91,14 @@ def get_transactions(trigger, barcode):
         {
             p: sum(
                 [
-                    1
-                    if p
-                    == prods[prods["barcode"] == int(row["barcode_prod"])][
-                        "name"
-                    ].values[0]
-                    else 0
+                    (
+                        1
+                        if p
+                        == prods[prods["barcode"] == int(row["barcode_prod"])][
+                            "name"
+                        ].values[0]
+                        else 0
+                    )
                     for i, row in user_trans.iterrows()
                 ]
             )
@@ -218,7 +220,7 @@ def show_balance(trigger, user_id):
     if trigger is not None and get_show_bill():
         trans = get_trans()
         users = get_users()
-        user_waste = get_waste() / len(users)
+        user_waste = 0 if len(users) == 0 else get_waste() / len(users)
         user_id = get_barcode(user_id)
         try:
             user = str(users[users["barcode"] == int(user_id)]["name"][0])
