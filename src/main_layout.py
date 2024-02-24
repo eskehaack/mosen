@@ -2,7 +2,6 @@ from dash import dcc, html, callback, Input, Output, State, ctx, no_update
 import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
-from dash import dash_table
 import os
 from src.tables.prod_table import get_waste
 from src.tables.trans_table import get_revenue, get_income
@@ -18,7 +17,7 @@ from src.modals import (
 )
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
-from src.components import get_upload
+from src.components import get_upload, get_table
 from src.connection import get_password, get_show_bill
 from src.data_connectors import get_prods, get_trans, get_users
 from src.tables.user_table import init
@@ -62,10 +61,8 @@ def user_settings_layout():
                     dbc.Col(
                         html.Div(
                             [
-                                dash_table.DataTable(
-                                    id="user_table",
-                                    data=get_users().to_dict(orient="records"),
-                                    row_deletable=False,
+                                get_table(
+                                    "user_table", get_users().to_dict(orient="records")
                                 )
                             ],
                         ),
@@ -121,9 +118,9 @@ def product_settings_layout():
                     dbc.Col(
                         html.Div(
                             [
-                                dash_table.DataTable(
-                                    id="prod_table",
-                                    data=get_prods().to_dict(orient="records"),
+                                get_table(
+                                    "prod_table",
+                                    get_prods().to_dict(orient="records"),
                                 )
                             ]
                         ),
@@ -174,25 +171,11 @@ def transaction_settings_layout():
                     dbc.Col(
                         html.Div(
                             [
-                                dash_table.DataTable(
-                                    id="trans_table",
-                                    data=get_trans().to_dict(
-                                        orient="records"
-                                    ),  # [['barcode_user', 'user', 'product', 'price', 'timestamp']].to_dict(orient="records"),
-                                    style_table={
-                                        "height": "300px",
-                                        "overflowY": "auto",
-                                    },
+                                get_table(
+                                    "trans_table", get_trans().to_dict(orient="records")
                                 ),
                                 html.Hr(),
-                                dash_table.DataTable(
-                                    id="income_table",
-                                    data=get_income(),
-                                    style_table={
-                                        "height": "300px",
-                                        "overflowY": "auto",
-                                    },
-                                ),
+                                get_table("income_table", get_income()),
                             ]
                         ),
                         width=9,
