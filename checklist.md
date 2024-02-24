@@ -8,5 +8,7 @@ TO DO LIST
  - [ ] Fix current bill thing
  - [ ] Fix zero-users before waste
  - [ ] Show number of products in transactions overview
- 
+ - [ ] Password recovery
+
+
  
