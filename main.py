@@ -21,7 +21,7 @@ run_in_web = False
 if __name__ == "__main__":
     print("Running....")
     if run_in_web:
-        app.run(debug=False)
+        run_my_server()
     else:
         threading.Thread(target=run_my_server, daemon=True).start()
         webview.create_window(
