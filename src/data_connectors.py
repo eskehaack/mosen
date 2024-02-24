@@ -20,7 +20,7 @@ def init():
                                     WHERE type='table';"""
     cur.execute(sql_query)
     extraction = lambda x: x[0]
-    tables = map(extraction, cur.fetchall())
+    tables = list(map(extraction, cur.fetchall()))
     defs = table_defs()
     for table in defs.keys():
         if table in tables:
