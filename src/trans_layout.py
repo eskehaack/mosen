@@ -229,5 +229,5 @@ def show_balance(trigger, user_id):
         user_balance = sum(
             map(int, trans[trans["barcode_user"] == str(user_id)]["price"])
         )
-        return f"{user} - Current bill is: {user_balance} DKK and: {user_waste} DKK in waste."
+        return f"{user} - Current bill is approximately: {round(user_balance + user_waste)}"
     return no_update
