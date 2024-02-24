@@ -62,9 +62,17 @@ def generate_pdf(type, pdf_filename="output.pdf", number_of_guest_codes=0):
 
         x_text_displacement = lambda x: x + int(width / 2)
         y_text_displacement = lambda y: y + 2
-        text_func = lambda x, y: f"{x} - {y}"
-        font_size = 13
+        font_size = 10
         show_boundary = True
+
+        def text_func(x, y):
+            if len(y) < 11:
+                return f"{x} - {y}"
+            initials = ".".join(
+                [letters[0].upper() for letters in y.split(" ")[1:]][-3:]
+            )
+            name = f"{y.split(' ')[0][:5]}. {initials}"
+            return f"{x} - {name}"
 
     else:
         x_0, y_0 = 300, 720
