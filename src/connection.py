@@ -1,10 +1,29 @@
 import sqlite3
+import os
 import pandas as pd
+
+from src.tables.create_tables import table_defs
 
 
 def init():
-    con = sqlite3.connect(".\data\settings.db")
+    data_file = "beerbase.db"
+    if not os.path.exists(data_file):
+        open(data_file, "w")
+
+    con = sqlite3.connect(data_file)
     cur = con.cursor()
+
+    sql_query = """SELECT name FROM sqlite_master 
+                                    WHERE type='table';"""
+    cur.execute(sql_query)
+    extraction = lambda x: str(x[0])
+    tables = list(map(extraction, cur.fetchall()))
+    defs = table_defs()
+    for table in defs.keys():
+        if table in tables:
+            continue
+        cur.execute(defs[table])
+        con.commit()
     return con, cur
 
 
