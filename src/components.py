@@ -8,14 +8,14 @@ def get_upload(id: str):
     )
 
 
-def get_table(id, data):
+def get_table(id, data, height):
     return dash_table.DataTable(
         id=id,
         data=data,
         row_deletable=False,
         fixed_rows={"headers": True},
         style_table={
-            "height": "300px",
+            "height": f"{str(height)}px",
             "overflowY": "auto",
         },
     )
