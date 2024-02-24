@@ -31,5 +31,11 @@ def table_defs():
                 barcode_prod varchar(255),
                 name varchar(255)
             )
-            """,
+        """,
+        "settings": """
+            CREATE TABLE settings (
+                password varchar(255),
+                show_bill varchar(255)
+            )
+        """,
     }
