@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def init():
-    con = sqlite3.connect(".\data\settings.db")
+    con = sqlite3.connect("beerbase.db")
     cur = con.cursor()
     return con, cur
 
