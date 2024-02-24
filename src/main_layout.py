@@ -62,7 +62,9 @@ def user_settings_layout():
                         html.Div(
                             [
                                 get_table(
-                                    "user_table", get_users().to_dict(orient="records")
+                                    "user_table",
+                                    get_users().to_dict(orient="records"),
+                                    300,
                                 )
                             ],
                         ),
@@ -121,6 +123,7 @@ def product_settings_layout():
                                 get_table(
                                     "prod_table",
                                     get_prods().to_dict(orient="records"),
+                                    300,
                                 )
                             ]
                         ),
@@ -172,10 +175,12 @@ def transaction_settings_layout():
                         html.Div(
                             [
                                 get_table(
-                                    "trans_table", get_trans().to_dict(orient="records")
+                                    "trans_table",
+                                    get_trans().to_dict(orient="records"),
+                                    100,
                                 ),
                                 html.Hr(),
-                                get_table("income_table", get_income()),
+                                get_table("income_table", get_income(), 300),
                             ]
                         ),
                         width=9,

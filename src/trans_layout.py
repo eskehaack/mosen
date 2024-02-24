@@ -52,7 +52,7 @@ def trans_modal():
                         ),
                         dbc.Row(
                             [
-                                get_table("show_prods", None),
+                                get_table("show_prods", None, 100),
                                 dbc.Input(
                                     placeholder="Product barcode",
                                     id="prod_barcode",
