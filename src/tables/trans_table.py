@@ -16,8 +16,10 @@ def get_income():
     user_income = list()
     if len(trans) > 0:
         price = lambda x: sum(map(int, trans[trans["barcode_user"] == str(x)]["price"]))
+        n_prods = lambda x: len(trans[trans["barcode_user"] == str(x)])
     else:
         price = lambda x: 0
+        n_prods = lambda x: 0
     for _, user_row in users.iterrows():
         barcode = str(user_row["barcode"])
         user_income.append(
@@ -26,6 +28,7 @@ def get_income():
                 "name": str(user_row["name"]),
                 "rank": str(user_row["rank"]),
                 "team": str(user_row["team"]),
+                "#products": n_prods(barcode),
                 "price": price(barcode),
             }
         )
