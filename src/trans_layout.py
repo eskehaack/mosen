@@ -223,7 +223,7 @@ def show_balance(trigger, user_id):
         user_waste = 0 if len(users) == 0 else get_waste() / len(users)
         user_id = get_barcode(user_id)
         try:
-            user = str(users[users["barcode"] == int(user_id)]["name"][0])
+            user = str(users[users["barcode"] == int(user_id)]["name"].values[0])
         except:
             return no_update
         user_balance = sum(
