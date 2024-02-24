@@ -4,7 +4,12 @@ import plotly.express as px
 import dash_bootstrap_components as dbc
 import os
 from src.tables.prod_table import get_waste
-from src.tables.trans_table import get_revenue, get_income
+from src.tables.trans_table import (
+    get_revenue,
+    get_income,
+    get_total_income,
+    get_current_return,
+)
 from src.modals import (
     new_user_modal,
     new_prod_modal,
@@ -148,9 +153,15 @@ def transaction_settings_layout():
                     dbc.Col(
                         html.Div(
                             [
-                                html.P(f"Total revenue: {get_revenue()}"),
+                                html.P(
+                                    f"Initially Projected Revenue: {get_total_income()}"
+                                ),
                                 html.Hr(),
-                                html.P(f"Total waste generated: {get_waste()}"),
+                                html.P(f"Current Revenue: {get_revenue()}"),
+                                html.Hr(),
+                                html.P(f"Current Waste: {get_waste()}"),
+                                html.Hr(),
+                                html.P(f"Current Return: {get_current_return()}"),
                                 html.Hr(),
                                 dbc.Button("Export payments", id="export_payments_btn"),
                                 html.Hr(),
