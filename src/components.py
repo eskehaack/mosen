@@ -18,6 +18,19 @@ def get_table(id, data, height):
             "height": f"{str(height)}px",
             "overflowY": "auto",
         },
+        style_cell={"overflow": "hidden", "textOverflow": "ellipsis", "maxWidth": 0},
+        tooltip_data=(
+            None
+            if data is None
+            else [
+                {
+                    column: {"value": str(value), "type": "markdown"}
+                    for column, value in row.items()
+                }
+                for row in data
+            ]
+        ),
+        tooltip_duration=None,
     )
 
 
