@@ -1,3 +1,4 @@
+import keyboard as k
 from dash import dcc, html, callback, Input, Output, State, ctx, no_update
 import pandas as pd
 import plotly.express as px
@@ -311,28 +312,37 @@ def settings_settings_layout():
                     ),
                     html.Hr(),
                     dbc.Col(
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    dbc.Button(
-                                        "Export Barcodes", id="export_barcodes_btn"
+                        [
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "Export Barcodes", id="export_barcodes_btn"
+                                        ),
+                                        width=8,
                                     ),
+                                    html.Br(),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "Confirm Settings", id="confirm_settings"
+                                        )
+                                    ),
+                                ]
+                            ),
+                            html.Hr(),
+                            dbc.Row(
+                                dbc.Col(
+                                    dbc.Button("Close app", id="close_app_btn"),
                                     width=8,
                                 ),
-                                html.Br(),
-                                dbc.Col(
-                                    dbc.Button(
-                                        "Confirm Settings", id="confirm_settings"
-                                    )
-                                ),
-                            ]
-                        ),
+                            ),
+                        ],
                         width=12,
                     ),
                 ]
             ),
             dbc.Alert(
-                "You removed the password, if set it to OLProgram, as this is the default. Please remember this!!!",
+                "You removed the password, I set it to OLProgram, as this is the default. Please remember this!!!",
                 color="danger",
                 id="bad_password_alert",
                 is_open=False,
@@ -490,3 +500,13 @@ def update_trans_table(trigger):
         product_settings_layout(),
         transaction_settings_layout(),
     )
+
+@callback(
+    Output("close_app_btn", "disabled"),
+    Input("close_app_btn", "n_clicks"),
+)
+def close_appI(trigger):
+    if trigger is not None:
+        k.unhook_all()
+        k.send("alt+f4")
+    return no_update
