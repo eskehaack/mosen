@@ -133,7 +133,9 @@ def control_payments_modal(open_trigger, close_trigger, added_value, up_down, ro
         return True, no_update
     elif trigger == "confirm_payments":
         waste = get_waste()
-        income = pd.DataFrame(get_income())
+        user_prices = pd.DataFrame(get_income())
+        zero_users = user_prices[user_prices["price"] <= 0].copy()
+        income = user_prices[user_prices["price"] > 0].copy()
         income["price"] += float(waste) / len(income)
         income["price"] += float(added_value) / len(income)
         if int(round) != 0:
@@ -144,6 +146,8 @@ def control_payments_modal(open_trigger, close_trigger, added_value, up_down, ro
             else:
                 rounding = lambda x: float(x) - (float(x) % round)
             income["price"] = income["price"].apply(rounding)
+
+        income = pd.concat([income, zero_users])
         return False, dcc.send_data_frame(
             income.to_csv, filename="swamp_machine_payments.csv", index=False
         )

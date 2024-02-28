@@ -1,6 +1,7 @@
 import webview
 import threading
 import logging
+import keyboard as k
 
 from src.main_layout import layout_func
 from app import app
@@ -20,8 +21,9 @@ run_in_web = False
 # Run the app
 if __name__ == "__main__":
     print("Running....")
+    k.block_key("alt")
     if run_in_web:
-        app.run(debug=False)
+        run_my_server()
     else:
         threading.Thread(target=run_my_server, daemon=True).start()
         webview.create_window(
@@ -33,3 +35,4 @@ if __name__ == "__main__":
             on_top=True,
         )
         webview.start()
+    k.unhook_all()

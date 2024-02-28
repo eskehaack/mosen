@@ -1,10 +1,10 @@
-from dash import dcc, html, callback, Input, Output, State, dash_table, no_update, ctx
+from dash import dcc, html, callback, Input, Output, State, no_update, ctx
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
 from src.tables.prod_table import get_waste
-from src.components import get_barcode
+from src.components import get_barcode, get_table
 from src.connection import get_show_bill
 from src.data_connectors import (
     get_prods,
@@ -52,7 +52,7 @@ def trans_modal():
                         ),
                         dbc.Row(
                             [
-                                dash_table.DataTable(id="show_prods"),
+                                get_table("show_prods", None, 100),
                                 dbc.Input(
                                     placeholder="Product barcode",
                                     id="prod_barcode",
@@ -223,11 +223,11 @@ def show_balance(trigger, user_id):
         user_waste = 0 if len(users) == 0 else get_waste() / len(users)
         user_id = get_barcode(user_id)
         try:
-            user = str(users[users["barcode"] == int(user_id)]["name"][0])
+            user = str(users[users["barcode"] == int(user_id)]["name"].values[0])
         except:
             return no_update
         user_balance = sum(
             map(int, trans[trans["barcode_user"] == str(user_id)]["price"])
         )
-        return f"{user} - Current bill is: {user_balance} DKK and: {user_waste} DKK in waste."
+        return f"{user} - Current bill is approximately: {round(user_balance + user_waste)}"
     return no_update
