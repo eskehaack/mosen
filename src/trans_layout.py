@@ -145,7 +145,7 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
                         "price": str(
                             prods[prods["barcode"] == int(row["barcode_prod"])][
                                 "price"
-                            ][0]
+                            ].values[0]
                         ),
                         "timestamp": str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
                     }
@@ -197,7 +197,7 @@ def new_trans(trigger, barcode, user_barcode):
             product = prods[prods["barcode"] == int(barcode)]
         except:
             return no_update, "", no_update
-        name = str(product["name"][0])
+        name = str(product["name"].values[0])
         new_transaction = pd.DataFrame([{"barcode_prod": barcode, "name": name}])
         current = pd.concat([current, new_transaction], ignore_index=True)
     display_text = [html.H1("Products: ")]

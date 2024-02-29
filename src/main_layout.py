@@ -438,11 +438,28 @@ def layout_func():
                         [
                             dbc.Col(
                                 children=dcc.Graph(
-                                    figure=create_overview("team"),
+                                    figure=create_overview(
+                                        graph_col := "team", average=False
+                                    ),
                                     id="overview_graph",
                                     config={"displayModeBar": False},
                                 ),
-                            )
+                            ),
+                            html.Br(),
+                            dbc.RadioItems(
+                                options=[
+                                    {"label": "Teams", "value": "team"},
+                                    {"label": "Ranks", "value": "rank"},
+                                    {"label": "Products", "value": "products"},
+                                ],
+                                value=graph_col,
+                                id="graph_selection",
+                                inline=True,
+                            ),
+                            html.Br(),
+                            dbc.Switch(
+                                id="graph_average", value=False, label="Average"
+                            ),
                         ]
                     ),
                 ]
