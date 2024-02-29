@@ -88,7 +88,11 @@ def create_overview(plot_col, average=False):
                 for i, overview in enumerate(overview_df)
             ]
 
-    return px.bar(overview_df, x=ranks, y=list(prods["name"]))
+    y = [
+        prods[prods["barcode"] == int(p)]["name"].values[0]
+        for p in transactions["barcode_prod"]
+    ]
+    return px.bar(overview_df, x=ranks, y=y)
 
 
 @callback(
@@ -309,7 +313,6 @@ def edit_new_data_modals(delete, edit, table, barcode):
             row = data[data["barcode"] == int(barcode)]
             indecies = row.index
             data.drop(indecies, inplace=True)
-            print(data, indecies)
             upload_values(data, table)
             row = list(row.values[0])
             return True, False, row, [no_update] * 6

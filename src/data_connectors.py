@@ -171,7 +171,7 @@ def validate_prod(row: dict, data: list):
 
 def validate_trans(row: dict, data: list):
     try:
-        row["timestamp"] = str(datetime.strptime(row["timestamp"]))
+        row["timestamp"] = str(datetime.strptime(row["timestamp"], "%d/%m/%Y %H:%M:%S"))
     except:
         row["timestamp"] = str(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
     return row, True

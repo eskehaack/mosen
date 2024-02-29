@@ -158,7 +158,7 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
                     }
                 ]
             )
-            transactions = pd.concat([transactions, new_row])
+            transactions = pd.concat([transactions, new_row], ignore_index=True)
         upload_values(transactions, "transactions")
         return False, "", no_update, False
     return no_update, no_update, no_update, False
