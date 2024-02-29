@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import os
-from src.tables.prod_table import get_waste
+from src.tables.prod_table import get_waste, get_waste_table
 from src.tables.trans_table import (
     get_revenue,
     get_income,
@@ -130,7 +130,13 @@ def product_settings_layout():
                                     "prod_table",
                                     get_prods().to_dict(orient="records"),
                                     300,
-                                )
+                                ),
+                                html.Hr(),
+                                get_table(
+                                    "waste_table",
+                                    get_waste_table(),
+                                    300,
+                                ),
                             ]
                         ),
                         width=9,
@@ -189,7 +195,7 @@ def transaction_settings_layout():
                                 get_table(
                                     "trans_table",
                                     get_trans().to_dict(orient="records"),
-                                    100,
+                                    300,
                                 ),
                                 html.Hr(),
                                 get_table("income_table", get_income(), 300),
@@ -500,6 +506,7 @@ def update_trans_table(trigger):
         product_settings_layout(),
         transaction_settings_layout(),
     )
+
 
 @callback(
     Output("close_app_btn", "disabled"),

@@ -19,6 +19,24 @@ def get_waste():
     return int(waste)
 
 
+def get_waste_table():
+    prods = get_prods()
+    waste = [
+        {
+            "Barcode": int(p["barcode"]),
+            "Product": p["name"],
+            "waste": (
+                n_waste := int(p["initial_stock"])
+                - int(p["current_stock"])
+                - get_currently_sold(p)
+            ),
+            "amount": n_waste * int(p["price"]),
+        }
+        for _, p in prods.iterrows()
+    ]
+    return waste
+
+
 @callback(
     Output("new_prod_modal", "is_open", allow_duplicate=True),
     Output({"type": "prod_input", "index": "inp_barcode_prod"}, "value"),
