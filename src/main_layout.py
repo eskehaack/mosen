@@ -35,50 +35,53 @@ users_init = init()
 def user_settings_layout():
     layout = dbc.Container(
         [
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(
-                            [
-                                dbc.Button("Create new user", id="new_user_btn"),
-                                html.Hr(),
-                                dbc.Button(
-                                    "Download users",
-                                    id={
-                                        "index": "users",
-                                        "type": "download_trigger_btn",
-                                    },
-                                ),
-                                html.Hr(),
-                                dbc.Button(
-                                    "Edit users",
-                                    id="edit_users",
-                                ),
-                                dcc.Download(
-                                    id={
-                                        "index": "users",
-                                        "type": "download_trigger",
-                                    }
-                                ),
-                            ],
+            html.Div(
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    dbc.Button("Create new user", id="new_user_btn"),
+                                    html.Hr(),
+                                    dbc.Button(
+                                        "Download users",
+                                        id={
+                                            "index": "users",
+                                            "type": "download_trigger_btn",
+                                        },
+                                    ),
+                                    html.Hr(),
+                                    dbc.Button(
+                                        "Edit users",
+                                        id="edit_users",
+                                    ),
+                                    dcc.Download(
+                                        id={
+                                            "index": "users",
+                                            "type": "download_trigger",
+                                        }
+                                    ),
+                                ],
+                            ),
+                            width=3,
                         ),
-                        width=3,
-                    ),
-                    dbc.Col(
-                        html.Div(
-                            [
-                                get_table(
-                                    "user_table",
-                                    get_users().to_dict(orient="records"),
-                                    300,
-                                )
-                            ],
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    get_table(
+                                        "user_table",
+                                        get_users().to_dict(orient="records"),
+                                        300,
+                                    )
+                                ],
+                            ),
+                            width=9,
                         ),
-                        width=9,
-                    ),
-                ],
-                align="center",
-                style={"height": "100%"},
+                    ],
+                    align="center",
+                    style={"height": "100%"},
+                ),
+                className="show_box",
             ),
             new_user_modal(),
             edit_modal(),
@@ -92,57 +95,60 @@ def user_settings_layout():
 def product_settings_layout():
     layout = dbc.Container(
         [
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(
-                            [
-                                dbc.Button("Create new product", id="new_prod_btn"),
-                                html.Hr(),
-                                dbc.Button("Update stock", id="open_update_stock"),
-                                html.Hr(),
-                                dbc.Button(
-                                    "Download Products",
-                                    id={
-                                        "index": "prods",
-                                        "type": "download_trigger_btn",
-                                    },
-                                ),
-                                html.Hr(),
-                                dbc.Button(
-                                    "Edit products",
-                                    id="edit_prods",
-                                ),
-                                dcc.Download(
-                                    id={
-                                        "index": "prods",
-                                        "type": "download_trigger",
-                                    }
-                                ),
-                            ]
+            html.Div(
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    dbc.Button("Create new product", id="new_prod_btn"),
+                                    html.Hr(),
+                                    dbc.Button("Update stock", id="open_update_stock"),
+                                    html.Hr(),
+                                    dbc.Button(
+                                        "Download Products",
+                                        id={
+                                            "index": "prods",
+                                            "type": "download_trigger_btn",
+                                        },
+                                    ),
+                                    html.Hr(),
+                                    dbc.Button(
+                                        "Edit products",
+                                        id="edit_prods",
+                                    ),
+                                    dcc.Download(
+                                        id={
+                                            "index": "prods",
+                                            "type": "download_trigger",
+                                        }
+                                    ),
+                                ]
+                            ),
+                            width=3,
                         ),
-                        width=3,
-                    ),
-                    dbc.Col(
-                        html.Div(
-                            [
-                                get_table(
-                                    "prod_table",
-                                    get_prods().to_dict(orient="records"),
-                                    300,
-                                ),
-                                html.Hr(),
-                                get_table(
-                                    "waste_table",
-                                    get_waste_table(),
-                                    300,
-                                ),
-                            ]
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    get_table(
+                                        "prod_table",
+                                        get_prods().to_dict(orient="records"),
+                                        200,
+                                    ),
+                                    html.Hr(),
+                                    get_table(
+                                        "waste_table",
+                                        get_waste_table(),
+                                        200,
+                                    ),
+                                ]
+                            ),
+                            width=9,
                         ),
-                        width=9,
-                    ),
-                ],
-                align="center",
+                    ],
+                    align="center",
+                ),
+                className="show_box",
             ),
             new_prod_modal(),
             update_stock_modal(),
@@ -155,55 +161,60 @@ def product_settings_layout():
 def transaction_settings_layout():
     layout = dbc.Container(
         [
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(
-                            [
-                                html.P(
-                                    f"Initially Projected Revenue: {get_total_income()}"
-                                ),
-                                html.Hr(),
-                                html.P(f"Current Revenue: {get_revenue()}"),
-                                html.Hr(),
-                                html.P(f"Current Waste: {get_waste()}"),
-                                html.Hr(),
-                                html.P(f"Current Return: {get_current_return()}"),
-                                html.Hr(),
-                                dbc.Button("Export payments", id="export_payments_btn"),
-                                html.Hr(),
-                                dbc.Button(
-                                    "Download Raw Transactions",
-                                    id={
-                                        "index": "transactions",
-                                        "type": "download_trigger_btn",
-                                    },
-                                ),
-                                dcc.Download(
-                                    id={
-                                        "index": "transactions",
-                                        "type": "download_trigger",
-                                    }
-                                ),
-                            ]
+            html.Div(
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.P(
+                                        f"Initially Projected Revenue: {get_total_income()}"
+                                    ),
+                                    html.Hr(),
+                                    html.P(f"Current Revenue: {get_revenue()}"),
+                                    html.Hr(),
+                                    html.P(f"Current Waste: {get_waste()}"),
+                                    html.Hr(),
+                                    html.P(f"Current Return: {get_current_return()}"),
+                                    html.Hr(),
+                                    dbc.Button(
+                                        "Export payments", id="export_payments_btn"
+                                    ),
+                                    html.Hr(),
+                                    dbc.Button(
+                                        "Download Raw Transactions",
+                                        id={
+                                            "index": "transactions",
+                                            "type": "download_trigger_btn",
+                                        },
+                                    ),
+                                    dcc.Download(
+                                        id={
+                                            "index": "transactions",
+                                            "type": "download_trigger",
+                                        }
+                                    ),
+                                ]
+                            ),
+                            width=3,
                         ),
-                        width=3,
-                    ),
-                    dbc.Col(
-                        html.Div(
-                            [
-                                get_table(
-                                    "trans_table",
-                                    get_trans().to_dict(orient="records"),
-                                    300,
-                                ),
-                                html.Hr(),
-                                get_table("income_table", get_income(), 300),
-                            ]
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    get_table(
+                                        "trans_table",
+                                        get_trans().to_dict(orient="records"),
+                                        200,
+                                    ),
+                                    html.Hr(),
+                                    get_table("income_table", get_income(), 200),
+                                ]
+                            ),
+                            width=9,
                         ),
-                        width=9,
-                    ),
-                ]
+                    ]
+                ),
+                className="show_box",
             ),
             dcc.Store(id="placeholder_for_empty_output"),
             export_payments_modal(),
@@ -217,135 +228,141 @@ def transaction_settings_layout():
 def settings_settings_layout():
     layout = dbc.Container(
         [
-            dbc.Row(
-                [
-                    html.Br(),
-                    dbc.Col(
-                        dbc.Row(
-                            [
-                                dbc.Col(html.H3("Upload user database: ")),
-                                html.Br(),
-                                dbc.Col(get_upload("users")),
-                                html.Br(),
-                                dbc.Col(
-                                    html.P(
-                                        id={
-                                            "index": "users",
-                                            "type": "show_upload_file",
-                                        }
-                                    )
-                                ),
-                            ]
-                        ),
-                        width=12,
-                    ),
-                    html.Hr(),
-                    dbc.Col(
-                        dbc.Row(
-                            [
-                                dbc.Col(html.H3("Upload product database: ")),
-                                html.Br(),
-                                dbc.Col(get_upload("prods")),
-                                html.Br(),
-                                dbc.Col(
-                                    html.P(
-                                        id={
-                                            "index": "prods",
-                                            "type": "show_upload_file",
-                                        }
-                                    )
-                                ),
-                            ]
-                        ),
-                        width=12,
-                    ),
-                    html.Hr(),
-                    dbc.Col(
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    html.H3(
-                                        "Upload transaction database \n(not recommended): "
-                                    )
-                                ),
-                                html.Br(),
-                                dbc.Col(get_upload("transactions")),
-                                html.Br(),
-                                dbc.Col(
-                                    html.P(
-                                        id={
-                                            "index": "transactions",
-                                            "type": "show_upload_file",
-                                        }
-                                    )
-                                ),
-                            ]
-                        ),
-                        width=12,
-                    ),
-                    html.Hr(),
-                    dbc.Col(
-                        dbc.Row(
-                            [
-                                dbc.Col(html.H3("Password: ")),
-                                html.Br(),
-                                dbc.Col(
-                                    dbc.Input(
-                                        value=get_password(),
-                                        id="settings_password",
-                                        type="text",
-                                        minLength=1,
-                                    )
-                                ),
-                            ]
-                        ),
-                        width=12,
-                    ),
-                    html.Hr(),
-                    dbc.Col(
-                        dbc.Row(
-                            [
-                                dbc.Col(html.H3("Display current bill: ")),
-                                html.Br(),
-                                dbc.Col(
-                                    dbc.Switch(
-                                        id="display_bill_switch", value=get_show_bill()
-                                    )
-                                ),
-                            ]
-                        ),
-                        width=12,
-                    ),
-                    html.Hr(),
-                    dbc.Col(
-                        [
+            html.Div(
+                dbc.Row(
+                    [
+                        html.Br(),
+                        dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(
-                                        dbc.Button(
-                                            "Export Barcodes", id="export_barcodes_btn"
-                                        ),
-                                        width=8,
-                                    ),
+                                    dbc.Col(html.P("Upload user database: ")),
+                                    html.Br(),
+                                    dbc.Col(get_upload("users")),
                                     html.Br(),
                                     dbc.Col(
-                                        dbc.Button(
-                                            "Confirm Settings", id="confirm_settings"
+                                        html.P(
+                                            id={
+                                                "index": "users",
+                                                "type": "show_upload_file",
+                                            }
                                         )
                                     ),
                                 ]
                             ),
-                            html.Hr(),
+                            width=12,
+                        ),
+                        html.Hr(),
+                        dbc.Col(
                             dbc.Row(
-                                dbc.Col(
-                                    dbc.Button("Close app", id="close_app_btn"),
-                                    width=8,
-                                ),
+                                [
+                                    dbc.Col(html.P("Upload product database: ")),
+                                    html.Br(),
+                                    dbc.Col(get_upload("prods")),
+                                    html.Br(),
+                                    dbc.Col(
+                                        html.P(
+                                            id={
+                                                "index": "prods",
+                                                "type": "show_upload_file",
+                                            }
+                                        )
+                                    ),
+                                ]
                             ),
-                        ],
-                        width=12,
-                    ),
-                ]
+                            width=12,
+                        ),
+                        html.Hr(),
+                        dbc.Col(
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        html.P(
+                                            "Upload transaction database \n(not recommended): "
+                                        )
+                                    ),
+                                    html.Br(),
+                                    dbc.Col(get_upload("transactions")),
+                                    html.Br(),
+                                    dbc.Col(
+                                        html.P(
+                                            id={
+                                                "index": "transactions",
+                                                "type": "show_upload_file",
+                                            }
+                                        )
+                                    ),
+                                ]
+                            ),
+                            width=12,
+                        ),
+                        html.Hr(),
+                        dbc.Col(
+                            dbc.Row(
+                                [
+                                    dbc.Col(html.P("Password: ")),
+                                    html.Br(),
+                                    dbc.Col(
+                                        dbc.Input(
+                                            value=get_password(),
+                                            id="settings_password",
+                                            type="text",
+                                            minLength=1,
+                                        )
+                                    ),
+                                ]
+                            ),
+                            width=12,
+                        ),
+                        html.Hr(),
+                        dbc.Col(
+                            dbc.Row(
+                                [
+                                    dbc.Col(html.P("Display current bill: ")),
+                                    html.Br(),
+                                    dbc.Col(
+                                        dbc.Switch(
+                                            id="display_bill_switch",
+                                            value=get_show_bill(),
+                                        )
+                                    ),
+                                ]
+                            ),
+                            width=12,
+                        ),
+                        html.Hr(),
+                        dbc.Col(
+                            [
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            dbc.Button(
+                                                "Export Barcodes",
+                                                id="export_barcodes_btn",
+                                            ),
+                                            width=8,
+                                        ),
+                                        html.Br(),
+                                        dbc.Col(
+                                            dbc.Button(
+                                                "Confirm Settings",
+                                                id="confirm_settings",
+                                            )
+                                        ),
+                                    ]
+                                ),
+                                html.Hr(),
+                                dbc.Row(
+                                    dbc.Col(
+                                        dbc.Button("Close app", id="close_app_btn"),
+                                        width=8,
+                                    ),
+                                ),
+                            ],
+                            width=12,
+                        ),
+                    ]
+                ),
+                className="show_box",
             ),
             dbc.Alert(
                 "You removed the password, I set it to OLProgram, as this is the default. Please remember this!!!",
@@ -446,21 +463,37 @@ def layout_func():
                                 ),
                             ),
                             html.Br(),
-                            dbc.RadioItems(
-                                options=[
-                                    {"label": "Teams", "value": "team"},
-                                    {"label": "Ranks", "value": "rank"},
-                                    {"label": "Products", "value": "products"},
-                                ],
-                                value=graph_col,
-                                id="graph_selection",
-                                inline=True,
+                            dbc.Col(
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            dbc.RadioItems(
+                                                options=[
+                                                    {"label": "Teams", "value": "team"},
+                                                    {"label": "Ranks", "value": "rank"},
+                                                    {
+                                                        "label": "Products",
+                                                        "value": "products",
+                                                    },
+                                                ],
+                                                value=graph_col,
+                                                id="graph_selection",
+                                                inline=True,
+                                            ),
+                                            width=3,
+                                        ),
+                                        dbc.Col(
+                                            dbc.Switch(
+                                                id="graph_average",
+                                                value=False,
+                                                label="Average",
+                                            ),
+                                        ),
+                                    ]
+                                )
                             ),
-                            html.Br(),
-                            dbc.Switch(
-                                id="graph_average", value=False, label="Average"
-                            ),
-                        ]
+                        ],
+                        className="show_box",
                     ),
                 ]
             ),

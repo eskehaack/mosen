@@ -32,36 +32,44 @@ def trans_modal():
                 close_button=False,
             ),
             dbc.ModalBody(
-                dbc.Col(
-                    [
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    html.Div(
-                                        [html.H1("Products: ")], id="show_current_prods"
-                                    )
+                [
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                html.Div(
+                                    [html.H1("Products: ")], id="show_current_prods"
                                 ),
-                                dbc.Col(
-                                    children=dcc.Graph(
-                                        id="trans_graph",
-                                        config={"displayModeBar": False},
-                                    ),
-                                    id="prod_barchart",
+                                width=4,
+                            ),
+                            dbc.Col(
+                                html.Div(
+                                    [
+                                        dbc.Row(
+                                            dbc.Col(
+                                                children=dcc.Graph(
+                                                    id="trans_graph",
+                                                    config={"displayModeBar": False},
+                                                    # style={"maxHeight": "350px"},
+                                                ),
+                                                id="prod_barchart",
+                                            ),
+                                        ),
+                                    ],
+                                    className="show_box",
                                 ),
-                            ]
+                                width=7,
+                            ),
+                        ]
+                    ),
+                    dbc.Row(
+                        dbc.Input(
+                            placeholder="Product barcode",
+                            id="prod_barcode",
+                            autoFocus=True,
                         ),
-                        dbc.Row(
-                            [
-                                get_table("show_prods", None, 100),
-                                dbc.Input(
-                                    placeholder="Product barcode",
-                                    id="prod_barcode",
-                                    autoFocus=True,
-                                ),
-                            ]
-                        ),
-                    ]
-                )
+                        align="end",
+                    ),
+                ],
             ),
         ],
         is_open=False,
@@ -74,7 +82,6 @@ def trans_modal():
 
 @callback(
     Output("trans_graph", "figure"),
-    Output("show_prods", "data"),
     Input("new_trans_inp", "n_submit"),
     State("new_trans_inp", "value"),
 )
@@ -105,7 +112,7 @@ def get_transactions(trigger, barcode):
             for p in list(prods["name"])
         }
     ]
-    return px.bar(trans_data), trans_data
+    return px.bar(trans_data)
 
 
 @callback(
@@ -202,7 +209,9 @@ def new_trans(trigger, barcode, user_barcode):
         current = pd.concat([current, new_transaction], ignore_index=True)
     display_text = [html.H1("Products: ")]
     for current_barcode in current["barcode_prod"].unique():
-        prod_name = str(current[current["barcode_prod"] == current_barcode]["name"][0])
+        prod_name = str(
+            current[current["barcode_prod"] == current_barcode]["name"].values[0]
+        )
         current_amount = int(len(current[current["barcode_prod"] == current_barcode]))
         display_text.append(html.H2(f"{current_amount}x: {prod_name}"))
 
