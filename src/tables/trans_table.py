@@ -4,8 +4,14 @@ from src.data_connectors import get_trans, get_users, get_prods
 
 
 def get_revenue():
+    trans = get_trans()
+    prods = get_prods()
+    price_dict = {str(p["barcode"]): p["price"] for _, p in prods.iterrows()}
+    trans["price"] = trans["barcode_prod"].apply(
+        lambda x: price_dict[str(x)] if str(x) in list(price_dict.keys()) else 0
+    )
     try:
-        return sum(map(int, list(get_trans()["price"])))
+        return sum(map(int, list(trans["price"])))
     except:
         return 0
 
@@ -29,6 +35,11 @@ def get_current_return():
 def get_income():
     trans = get_trans()
     users = get_users()
+    prods = get_prods()
+    price_dict = {str(p["barcode"]): p["price"] for _, p in prods.iterrows()}
+    trans["price"] = trans["barcode_prod"].apply(
+        lambda x: price_dict[str(x)] if str(x) in list(price_dict.keys()) else 0
+    )
     user_income = list()
     if len(trans) > 0:
         price = lambda x: sum(map(int, trans[trans["barcode_user"] == str(x)]["price"]))

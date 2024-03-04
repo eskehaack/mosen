@@ -229,6 +229,12 @@ def show_balance(trigger, user_id):
     if trigger is not None and get_show_bill():
         trans = get_trans()
         users = get_users()
+        prods = get_prods()
+        price_dict = {str(p["barcode"]): p["price"] for _, p in prods.iterrows()}
+        trans["price"] = trans["barcode_prod"].apply(
+            lambda x: price_dict[str(x)] if str(x) in list(price_dict.keys()) else 0
+        )
+
         user_waste = 0 if len(users) == 0 else get_waste() / len(users)
         user_id = get_barcode(user_id)
         try:
