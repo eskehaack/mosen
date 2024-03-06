@@ -1,6 +1,6 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL, MATCH, no_update
-from src.data_connectors import get_users, get_prods, get_trans, upload_values
+from src.data_connection import get_users, get_prods, get_trans, upload_values
 from src.tables.trans_table import get_currently_sold
 
 

@@ -1,6 +1,4 @@
-import pandas as pd
-from dash import callback, Output, Input, State, html, ctx, ALL
-from src.data_connectors import get_trans, get_users, get_prods
+from src.data_connection import get_trans, get_users, get_prods
 
 
 def get_revenue():

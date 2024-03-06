@@ -1,8 +1,13 @@
 from dash import Output, Input, State, callback, ctx, no_update, html, ALL, MATCH, dcc
 import pandas as pd
 import plotly.express as px
-from src.connection import update_values
-from src.data_connectors import get_prods, get_trans, get_users, upload_values
+from src.data_connection import (
+    get_prods,
+    get_trans,
+    get_users,
+    upload_values,
+    update_values,
+)
 from src.tables.prod_table import get_waste
 from src.tables.trans_table import get_income
 from src.barcode_generator import generate_pdf

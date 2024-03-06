@@ -4,7 +4,7 @@ from reportlab.pdfgen import canvas
 from barcode.upc import UniversalProductCodeA
 from barcode.writer import ImageWriter
 
-from src.data_connectors import get_users, get_prods
+from src.data_connection import get_users, get_prods
 
 
 def get_codes_users():

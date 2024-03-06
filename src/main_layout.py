@@ -24,8 +24,13 @@ from src.modals import (
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
 from src.components import get_upload, get_table
-from src.connection import get_password, get_show_bill
-from src.data_connectors import get_prods, get_trans, get_users
+from src.data_connection import (
+    get_prods,
+    get_trans,
+    get_users,
+    get_password,
+    get_show_bill,
+)
 from src.tables.user_table import init
 from app import app
 

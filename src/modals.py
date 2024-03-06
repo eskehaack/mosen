@@ -1,7 +1,7 @@
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 import pandas as pd
-from src.data_connectors import get_prods, get_trans, get_users
+from src.data_connection import get_prods, get_trans, get_users
 
 USER_COLS = ["rank", "team"]
 

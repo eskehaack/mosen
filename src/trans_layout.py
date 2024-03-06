@@ -5,8 +5,7 @@ import plotly.express as px
 from datetime import datetime
 from src.tables.prod_table import get_waste
 from src.components import get_barcode, get_table
-from src.connection import get_show_bill
-from src.data_connectors import (
+from src.data_connection import (
     get_prods,
     get_trans,
     get_users,
@@ -14,6 +13,7 @@ from src.data_connectors import (
     update_current_trans,
     upload_values,
     reset_current_trans,
+    get_show_bill,
 )
 
 
