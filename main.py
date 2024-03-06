@@ -21,8 +21,8 @@ run_in_web = False
 # Run the app
 if __name__ == "__main__":
     print("Running....")
-    # k.block_key("alt")
-    # k.block_key("windows")
+    k.block_key("alt")
+    k.block_key("windows")
     if run_in_web:
         run_my_server()
     else:
