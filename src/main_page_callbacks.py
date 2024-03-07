@@ -1,8 +1,13 @@
 from dash import Output, Input, State, callback, ctx, no_update, html, ALL, MATCH, dcc
 import pandas as pd
 import plotly.express as px
-from src.connection import update_values
-from src.data_connectors import get_prods, get_trans, get_users, upload_values
+from src.data_connection import (
+    get_prods,
+    get_trans,
+    get_users,
+    upload_values,
+    update_values,
+)
 from src.tables.prod_table import get_waste
 from src.tables.trans_table import get_income
 from src.barcode_generator import generate_pdf
@@ -11,7 +16,7 @@ import base64
 import io
 
 
-def create_overview(plot_col):
+def create_overview(plot_col, average=False):
     prods = get_prods()
     transactions = get_trans()
     users = get_users()
@@ -26,12 +31,25 @@ def create_overview(plot_col):
             ret = "UNKNOWN"
         return ret
 
-    ranks = users[plot_col].unique()
-    rank_dict = {str(row["barcode"]): row[str(plot_col)] for i, row in users.iterrows()}
+    if plot_col == "products":
+        ranks = [f"{cat}_" for cat in list(prods["category"].unique())]
+        rank_dict = {
+            str(row["barcode"]): f'{row["category"]}_' for i, row in prods.iterrows()
+        }
+        transactions["rank"] = transactions["barcode_prod"].apply(
+            translation, t_dict=rank_dict
+        )
 
-    transactions["rank"] = transactions["barcode_user"].apply(
-        translation, t_dict=rank_dict
-    )
+    else:
+        ranks = [f"{rank}_" for rank in list(users[str(plot_col)].unique())]
+        rank_dict = {
+            str(row["barcode"]): f"{row[str(plot_col)]}_" for i, row in users.iterrows()
+        }
+
+        transactions["rank"] = transactions["barcode_user"].apply(
+            translation, t_dict=rank_dict
+        )
+
     prod_dict = {str(row["barcode"]): row["name"] for i, row in prods.iterrows()}
     transactions["prod_names"] = transactions["barcode_prod"].apply(
         translation, t_dict=prod_dict
@@ -40,15 +58,59 @@ def create_overview(plot_col):
         transactions[transactions["rank"] == rank].value_counts("prod_names").to_dict()
         for rank in ranks
     ]
-    return px.bar(overview_df, x=ranks, y=list(prods["name"]))
+
+    if average:
+        if plot_col == "products":
+            overview_df = [
+                {
+                    rank: (
+                        0
+                        if (
+                            number := int(
+                                prods[prods["category"] == ranks[i][:-1]][
+                                    "initial_stock"
+                                ].values[0]
+                            )
+                        )
+                        == 0
+                        else int(count) / number
+                    )
+                    for rank, count in overview.items()
+                }
+                for i, overview in enumerate(overview_df)
+            ]
+        else:
+            overview_df = [
+                {
+                    rank: (
+                        0
+                        if (number := len(users[users[str(plot_col)] == ranks[i][:-1]]))
+                        == 0
+                        else int(count) / number
+                    )
+                    for rank, count in overview.items()
+                }
+                for i, overview in enumerate(overview_df)
+            ]
+
+    y = [
+        prods[prods["barcode"] == int(p)]["name"].values[0]
+        for p in transactions["barcode_prod"]
+    ]
+    return px.bar(overview_df, x=ranks, y=y)
 
 
-@callback(Output("overview_graph", "figure"), Input("new_trans_modal", "is_open"))
-def update_overview_graph(trans_modal_open):
+@callback(
+    Output("overview_graph", "figure"),
+    Input("new_trans_modal", "is_open"),
+    Input("graph_selection", "value"),
+    Input("graph_average", "value"),
+)
+def update_overview_graph(trans_modal_open, graph_col, average):
     if not (ctx.triggered_id is not None and trans_modal_open == False):
         return no_update
 
-    return create_overview("team")
+    return create_overview(graph_col, average)
 
 
 @callback(
@@ -256,7 +318,6 @@ def edit_new_data_modals(delete, edit, table, barcode):
             row = data[data["barcode"] == int(barcode)]
             indecies = row.index
             data.drop(indecies, inplace=True)
-            print(data, indecies)
             upload_values(data, table)
             row = list(row.values[0])
             return True, False, row, [no_update] * 6

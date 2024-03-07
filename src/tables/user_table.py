@@ -1,6 +1,6 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL
-from src.data_connectors import upload_values, get_users
+from src.data_connection import upload_values, get_users
 
 
 def init():

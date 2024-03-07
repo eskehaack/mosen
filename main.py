@@ -2,6 +2,7 @@ import webview
 import threading
 import logging
 import keyboard as k
+from ctypes import windll
 
 from src.main_layout import layout_func
 from app import app
@@ -20,9 +21,14 @@ run_in_web = False
 
 # Run the app
 if __name__ == "__main__":
+
+    # Disable ways of closing the app
     print("Running....")
     k.block_key("alt")
     k.block_key("windows")
+    h = windll.user32.FindWindowA(b"Shell_TrayWnd", None)
+    windll.user32.ShowWindow(h, 0)
+
     if run_in_web:
         run_my_server()
     else:
@@ -36,4 +42,7 @@ if __name__ == "__main__":
             on_top=True,
         )
         webview.start()
+
+    # Renable all keys and taskbars
     k.unhook_all()
+    windll.user32.ShowWindow(h, 9)

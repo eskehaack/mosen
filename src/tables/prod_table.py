@@ -1,6 +1,6 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL, MATCH, no_update
-from src.data_connectors import get_users, get_prods, get_trans, upload_values
+from src.data_connection import get_users, get_prods, get_trans, upload_values
 from src.tables.trans_table import get_currently_sold
 
 
@@ -17,6 +17,24 @@ def get_waste():
         ]
     )
     return int(waste)
+
+
+def get_waste_table():
+    prods = get_prods()
+    waste = [
+        {
+            "Barcode": int(p["barcode"]),
+            "Product": p["name"],
+            "waste": (
+                n_waste := int(p["initial_stock"])
+                - int(p["current_stock"])
+                - get_currently_sold(p)
+            ),
+            "amount": n_waste * int(p["price"]),
+        }
+        for _, p in prods.iterrows()
+    ]
+    return waste
 
 
 @callback(

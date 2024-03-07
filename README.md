@@ -36,4 +36,4 @@ When you're done implementing your new feature, create a "Pull Request" in githu
 
 ## Building / Freezing the app
 The app is frozen / build (or whatever you want to call it) with pyinstaller.\
-Simply run ```pyinstaller -F -n "swampmachine.exe" --distpath "." --clean --icon "assets\favicon.ico" --log-level=WARN main.py```
+Simply run ```pyinstaller -F -n "swampmachine.exe" --distpath "." --clean --icon "assets\favicon.ico" --add-data "assets:assets" --log-level=WARN main.py```
