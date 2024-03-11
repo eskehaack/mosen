@@ -3,6 +3,7 @@ import threading
 import logging
 import keyboard as k
 from ctypes import windll
+import pythonnet  # <---- Hook for .NET framework
 
 from src.main_layout import layout_func
 from app import app
