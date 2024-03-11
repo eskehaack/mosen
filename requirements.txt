@@ -5,3 +5,5 @@ reportlab==4.0.9
 python-barcode==0.15.1
 pywebview==4.4.1
 pyinstaller==6.3.0
+keyboard==0.13.5
+pythonnet==3.0.3
