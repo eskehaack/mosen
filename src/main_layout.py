@@ -524,9 +524,10 @@ def layout_func():
     Output("password_modal", "is_open"),
     Input("open_settings", "n_clicks"),
     Input("confirm_password", "n_clicks"),
+    Input("confirm_password", "n_submit"),
     State("password_input", "value"),
 )
-def open_settings(trigger_open, trigger_close, password):
+def open_password(trigger_open, trigger_close, password):
     trigger = ctx.triggered_id
     if trigger is not None and trigger == "open_settings":
         return True
