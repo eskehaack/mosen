@@ -71,6 +71,7 @@ for col in PROD_COLS:
         dbc.Input(
             placeholder=col.replace("_", " ").title(),
             id={"type": "prod_input", "index": f"inp_{col}_prod"},
+            type="text" if col == "category" else "number",
         )
     )
     prod_body.append(html.Hr())
