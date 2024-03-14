@@ -4,6 +4,7 @@
 
 body {
     background-color: var(--bgcol);
+    padding: 10px;
 }
 
 h1 {

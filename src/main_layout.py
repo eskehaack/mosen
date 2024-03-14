@@ -240,10 +240,8 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(html.P("Upload user database: ")),
-                                    html.Br(),
+                                    dbc.Col(html.P("Upload user database: "), width=4),
                                     dbc.Col(get_upload("users")),
-                                    html.Br(),
                                     dbc.Col(
                                         html.P(
                                             id={
@@ -260,10 +258,10 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(html.P("Upload product database: ")),
-                                    html.Br(),
+                                    dbc.Col(
+                                        html.P("Upload product database: "), width=4
+                                    ),
                                     dbc.Col(get_upload("prods")),
-                                    html.Br(),
                                     dbc.Col(
                                         html.P(
                                             id={
@@ -283,11 +281,10 @@ def settings_settings_layout():
                                     dbc.Col(
                                         html.P(
                                             "Upload transaction database \n(not recommended): "
-                                        )
+                                        ),
+                                        width=4,
                                     ),
-                                    html.Br(),
                                     dbc.Col(get_upload("transactions")),
-                                    html.Br(),
                                     dbc.Col(
                                         html.P(
                                             id={
@@ -304,8 +301,7 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(html.P("Password: ")),
-                                    html.Br(),
+                                    dbc.Col(html.P("Password: "), width=4),
                                     dbc.Col(
                                         dbc.Input(
                                             value=get_password(),
@@ -314,7 +310,8 @@ def settings_settings_layout():
                                             minLength=1,
                                         )
                                     ),
-                                ]
+                                ],
+                                align="center",
                             ),
                             width=12,
                         ),
@@ -322,8 +319,7 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(html.P("Display current bill: ")),
-                                    html.Br(),
+                                    dbc.Col(html.P("Display current bill: "), width=4),
                                     dbc.Col(
                                         dbc.Switch(
                                             id="display_bill_switch",
@@ -346,26 +342,27 @@ def settings_settings_layout():
                                             ),
                                             width=8,
                                         ),
-                                        html.Br(),
                                         dbc.Col(
                                             dbc.Button(
                                                 "Confirm Settings",
                                                 id="confirm_settings",
                                             )
                                         ),
-                                    ]
-                                ),
-                                html.Hr(),
-                                dbc.Row(
-                                    dbc.Col(
-                                        dbc.Button("Close app", id="close_app_btn"),
-                                        width=8,
-                                    ),
+                                    ],
+                                    align="center",
                                 ),
                             ],
                             width=12,
                         ),
-                    ]
+                        html.Hr(),
+                        dbc.Row(
+                            dbc.Col(
+                                dbc.Button("Close app", id="close_app_btn"),
+                                width=8,
+                            ),
+                        ),
+                    ],
+                    align="center",
                 ),
                 className="show_box",
             ),

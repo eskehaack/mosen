@@ -5,6 +5,7 @@ def get_upload(id: str):
     return dcc.Upload(
         ["Drag and drop or ", html.A("Select a File")],
         id={"index": id, "type": "database_upload"},
+        className="upload-field",
     )
 
 
