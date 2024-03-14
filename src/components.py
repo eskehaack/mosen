@@ -29,7 +29,7 @@ def get_table(id, data, height):
             if data is None
             else [
                 {
-                    column.title().replace("_", " "): {
+                    column.replace("_", " ").title(): {
                         "value": str(value),
                         "type": "markdown",
                     }

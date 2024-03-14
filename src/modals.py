@@ -20,7 +20,8 @@ user_body = [
 for col in USER_COLS:
     user_body.append(
         dbc.Input(
-            placeholder=col, id={"type": "user_input", "index": f"inp_{col}_user"}
+            placeholder=col.replace("_", " ").title(),
+            id={"type": "user_input", "index": f"inp_{col}_user"},
         )
     )
     user_body.append(html.Hr())
@@ -68,7 +69,8 @@ prod_body = [
 for col in PROD_COLS:
     prod_body.append(
         dbc.Input(
-            placeholder=col, id={"type": "prod_input", "index": f"inp_{col}_prod"}
+            placeholder=col.replace("_", " ").title(),
+            id={"type": "prod_input", "index": f"inp_{col}_prod"},
         )
     )
     prod_body.append(html.Hr())
