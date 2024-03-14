@@ -63,7 +63,7 @@ def trans_modal():
                     ),
                     dbc.Row(
                         dbc.Input(
-                            placeholder="Product barcode",
+                            placeholder="Barcode",
                             id="prod_barcode",
                             autoFocus=True,
                         ),

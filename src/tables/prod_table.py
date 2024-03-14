@@ -25,12 +25,12 @@ def get_waste_table():
         {
             "Barcode": int(p["barcode"]),
             "Product": p["name"],
-            "waste": (
+            "Waste": (
                 n_waste := int(p["initial_stock"])
                 - int(p["current_stock"])
                 - get_currently_sold(p)
             ),
-            "amount": n_waste * int(p["price"]),
+            "Amount": n_waste * int(p["price"]),
         }
         for _, p in prods.iterrows()
     ]
