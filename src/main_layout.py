@@ -554,6 +554,8 @@ def open_settings(trigger, password):
     Output("product_settings", "children"),
     Output("economy_settings", "children"),
     Input("setting_tabs", "value"),
+    Input("confirm_prod", "n_clicks"),
+    Input("confirm_user", "n_clicks"),
 )
 def update_trans_table(trigger):
     return (
