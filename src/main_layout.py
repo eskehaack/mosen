@@ -524,14 +524,16 @@ def layout_func():
     Output("password_modal", "is_open"),
     Input("open_settings", "n_clicks"),
     Input("confirm_password", "n_clicks"),
-    Input("confirm_password", "n_submit"),
+    Input("password_input", "n_submit"),
     State("password_input", "value"),
 )
-def open_password(trigger_open, trigger_close, password):
+def open_password(trigger_open, trigger_close, trigger_enter, password):
     trigger = ctx.triggered_id
     if trigger is not None and trigger == "open_settings":
         return True
-    elif trigger is not None and trigger == "confirm_password":
+    elif trigger is not None and (
+        trigger == "confirm_password" or trigger == "password_input"
+    ):
         if password == get_password():
             return False
     return no_update
@@ -541,10 +543,13 @@ def open_password(trigger_open, trigger_close, password):
     Output("settings_modal", "is_open"),
     Output("password_input", "value"),
     Input("confirm_password", "n_clicks"),
+    Input("password_input", "n_submit"),
     State("password_input", "value"),
 )
-def open_settings(trigger, password):
-    if trigger is not None and trigger > 0:
+def open_settings(trigger, trigger_enter, password):
+    if (trigger is not None and trigger > 0) or (
+        trigger_enter is not None and trigger_enter > 0
+    ):
         if password == get_password():
             return True, ""
     return False, no_update
@@ -558,7 +563,7 @@ def open_settings(trigger, password):
     Input("confirm_prod", "n_clicks"),
     Input("confirm_user", "n_clicks"),
 )
-def update_trans_table(trigger):
+def update_settings_layout(trigger, prods_trigger, user_trigger):
     return (
         user_settings_layout(),
         product_settings_layout(),
