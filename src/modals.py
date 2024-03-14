@@ -165,7 +165,12 @@ def password_modal():
         [
             dbc.ModalHeader("Input Password"),
             dbc.ModalBody(
-                dbc.Input(placeholder="Password", type="password", id="password_input")
+                dbc.Input(
+                    placeholder="Password",
+                    type="password",
+                    id="password_input",
+                    autofocus=True,
+                )
             ),
             dbc.ModalFooter(
                 dbc.Row([dbc.Col(dbc.Button("Confirm", id="confirm_password"))])
