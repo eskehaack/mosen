@@ -32,18 +32,20 @@ def create_overview(plot_col, average=False):
         return ret
 
     if plot_col == "products":
-        ranks = [f"{cat}_" for cat in list(prods["category"].unique())]
+        text = lambda x: f"{x} category"
+        ranks = [text(cat) for cat in list(prods["category"].unique())]
         rank_dict = {
-            str(row["barcode"]): f'{row["category"]}_' for i, row in prods.iterrows()
+            str(row["barcode"]): text(row["category"]) for i, row in prods.iterrows()
         }
         transactions["rank"] = transactions["barcode_prod"].apply(
             translation, t_dict=rank_dict
         )
 
     else:
-        ranks = [f"{rank}_" for rank in list(users[str(plot_col)].unique())]
+        text = lambda x: f"{x} {plot_col.lower()}"
+        ranks = [text(rank) for rank in list(users[str(plot_col)].unique())]
         rank_dict = {
-            str(row["barcode"]): f"{row[str(plot_col)]}_" for i, row in users.iterrows()
+            str(row["barcode"]): text(row[str(plot_col)]) for i, row in users.iterrows()
         }
 
         transactions["rank"] = transactions["barcode_user"].apply(
