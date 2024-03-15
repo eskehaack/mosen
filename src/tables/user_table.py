@@ -1,6 +1,6 @@
 import pandas as pd
-from dash import callback, Output, Input, State, html, ctx, ALL
-from src.data_connection import upload_values, get_users
+from dash import callback, Output, Input, State, html, ctx, ALL, no_update
+from src.data_connection import upload_values, get_users, get_trans
 
 
 def init():
@@ -44,18 +44,30 @@ def enable_confirm(inps, ids, invalid_barcode):
 
 @callback(
     Output("user_table", "data"),
+    Output("edit_input", "value", allow_duplicate=True),
     Input("confirm_user", "n_clicks"),
     State({"type": "user_input", "index": ALL}, "value"),
     State({"type": "user_input", "index": ALL}, "id"),
+    State("edit_input", "value"),
     prevent_initial_call=True,
 )
-def add_row(n_clicks, vals, ids):
+def add_row(n_clicks, vals, ids, edit_barcode):
     data = get_users()
+    if n_clicks is None:
+        return no_update, no_update
     if n_clicks > 0:
         new = pd.DataFrame([{c: vals[i] for i, c in enumerate(data.columns)}])
         data = pd.concat([data, new])
     upload_values(data, "users")
-    return data.to_dict(orient="records")
+
+    if edit_barcode is not None and int(edit_barcode) > 999:
+        trans = get_trans()
+        trans.loc[trans["barcode_user"] == str(edit_barcode), "barcode_user"] = int(
+            vals[0]
+        )
+        upload_values(trans, "transactions")
+
+    return data.to_dict(orient="records"), None
 
 
 @callback(

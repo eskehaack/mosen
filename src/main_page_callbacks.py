@@ -96,7 +96,7 @@ def create_overview(plot_col, average=False):
             ]
 
     y = [
-        prods[prods["barcode"] == int(p)]["name"].values[0]
+        prods[prods["barcode"] == str(p)]["name"].values[0]
         for p in transactions["barcode_prod"]
     ]
     return px.bar(overview_df, x=ranks, y=y)
@@ -311,14 +311,14 @@ def edit_new_data_modals(delete, edit, table, barcode):
             data = get_users()
         elif table == "prods":
             data = get_prods()
-        indecies = data[data["barcode"] == int(barcode)].index
+        indecies = data[data["barcode"] == str(barcode)].index
         data.drop(indecies, inplace=True)
         upload_values(data, table)
         return no_update, no_update, [no_update] * 4, [no_update] * 6
     elif trigger == "edit_modal_edit" and barcode is not None:
         if table == "users":
             data = get_users()
-            row = data[data["barcode"] == int(barcode)]
+            row = data[data["barcode"] == str(barcode)]
             indecies = row.index
             data.drop(indecies, inplace=True)
             upload_values(data, table)
@@ -326,7 +326,7 @@ def edit_new_data_modals(delete, edit, table, barcode):
             return True, False, row, [no_update] * 6
         if table == "prods":
             data = get_prods()
-            row = data[data["barcode"] == int(barcode)]
+            row = data[data["barcode"] == str(barcode)]
             indecies = row.index
             data.drop(indecies, inplace=True)
             upload_values(data, table)

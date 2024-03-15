@@ -73,19 +73,31 @@ def enable_confirm(inps, invalid_barcode):
 
 @callback(
     Output("prod_table", "data"),
+    Output("edit_input", "value", allow_duplicate=True),
     Input("confirm_prod", "n_clicks"),
     Input("confirm_new_stock", "n_clicks"),
     State({"type": "prod_input", "index": ALL}, "value"),
     State({"type": "prod_input", "index": ALL}, "id"),
+    State("edit_input", "value"),
     prevent_initial_call=True,
 )
-def add_row(n_clicks, stock_trigger, vals, ids):
+def add_row(n_clicks, stock_trigger, vals, ids, edit_barcode):
     data = get_prods()
+    if n_clicks is None:
+        return no_update, no_update
     if n_clicks > 0:
         new = pd.DataFrame([{c: vals[i] for i, c in enumerate(data.columns)}])
         data = pd.concat([data, new])
     upload_values(data, "prods")
-    return data.to_dict(orient="records")
+
+    if edit_barcode is not None and int(edit_barcode) < 999:
+        trans = get_trans()
+        trans.loc[trans["barcode_prod"] == str(edit_barcode), "barcode_prod"] = int(
+            vals[0]
+        )
+        upload_values(trans, "transactions")
+
+    return data.to_dict(orient="records"), None
 
 
 @callback(

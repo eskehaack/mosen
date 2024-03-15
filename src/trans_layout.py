@@ -101,7 +101,7 @@ def get_transactions(trigger, barcode):
                     (
                         1
                         if p
-                        == prods[prods["barcode"] == int(row["barcode_prod"])][
+                        == prods[prods["barcode"] == str(row["barcode_prod"])][
                             "name"
                         ].values[0]
                         else 0
@@ -150,7 +150,7 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
                         "barcode_user": barcode_open,
                         "barcode_prod": row["barcode_prod"],
                         "price": str(
-                            prods[prods["barcode"] == int(row["barcode_prod"])][
+                            prods[prods["barcode"] == str(row["barcode_prod"])][
                                 "price"
                             ].values[0]
                         ),
@@ -201,7 +201,7 @@ def new_trans(trigger, barcode, user_barcode):
         return no_update, ""
     else:
         try:
-            product = prods[prods["barcode"] == int(barcode)]
+            product = prods[prods["barcode"] == str(barcode)]
         except:
             return no_update, "", no_update
         name = str(product["name"].values[0])
@@ -238,7 +238,7 @@ def show_balance(trigger, user_id):
         user_waste = 0 if len(users) == 0 else get_waste() / len(users)
         user_id = get_barcode(user_id)
         try:
-            user = str(users[users["barcode"] == int(user_id)]["name"].values[0])
+            user = str(users[users["barcode"] == str(user_id)]["name"].values[0])
         except:
             return no_update
         user_balance = sum(
