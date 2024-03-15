@@ -1,4 +1,5 @@
 import keyboard as k
+import time
 from dash import dcc, html, callback, Input, Output, State, ctx, no_update
 import pandas as pd
 import plotly.express as px
@@ -89,7 +90,6 @@ def user_settings_layout():
                 className="show_box",
             ),
             new_user_modal(),
-            edit_modal(),
             dcc.Store(id="edit_modal_row"),
             dcc.Store(id={"index": "users", "type": "bad_rows"}),
         ],
@@ -502,6 +502,7 @@ def layout_func():
             settings_mode_func(),
             trans_modal(),
             password_modal(),
+            edit_modal(),
             dcc.Store(id="update_settings"),
             dbc.Alert(
                 "There are no users, ya dumb dumb!",
@@ -561,6 +562,7 @@ def open_settings(trigger, trigger_enter, password):
     Input("confirm_user", "n_clicks"),
 )
 def update_settings_layout(trigger, prods_trigger, user_trigger):
+    time.sleep(1)
     return (
         user_settings_layout(),
         product_settings_layout(),

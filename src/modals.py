@@ -69,7 +69,8 @@ prod_body = [
 for col in PROD_COLS:
     prod_body.append(
         dbc.Input(
-            placeholder=col.replace("_", " ").title(),
+            placeholder=col.replace("_", " ").title()
+            + ("(typically same as Initial Stock)" if col == "current_stock" else ""),
             id={"type": "prod_input", "index": f"inp_{col}_prod"},
             type="text" if col == "category" else "number",
         )

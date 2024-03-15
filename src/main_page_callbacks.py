@@ -278,6 +278,7 @@ def open_bad_rows(trigger, data):
     Input("edit_prods", "n_clicks"),
     Input("edit_modal_delete", "n_clicks"),
     Input("edit_modal_edit", "n_clicks"),
+    prevent_initial_call=True,
 )
 def open_edit_modal(open_user, open_prod, close_delete, close_edit):
     trigger = ctx.triggered_id
@@ -309,7 +310,7 @@ def edit_new_data_modals(delete, edit, table, barcode):
         if table == "users":
             data = get_users()
         elif table == "prods":
-            data = get_users()
+            data = get_prods()
         indecies = data[data["barcode"] == int(barcode)].index
         data.drop(indecies, inplace=True)
         upload_values(data, table)
@@ -324,6 +325,7 @@ def edit_new_data_modals(delete, edit, table, barcode):
             row = list(row.values[0])
             return True, False, row, [no_update] * 6
         if table == "prods":
+            data = get_prods()
             row = data[data["barcode"] == int(barcode)]
             indecies = row.index
             data.drop(indecies, inplace=True)
