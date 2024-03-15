@@ -49,3 +49,12 @@ h1 {
 .barcode-input {
     width: 83vw;
 }
+
+.show_box hr {
+    height: 2px;
+    width: 97%;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 2px;
+}

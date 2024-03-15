@@ -345,7 +345,7 @@ def settings_settings_layout():
                             ),
                             width=12,
                         ),
-                        dbc.Col(html.Hr()),
+                        html.Hr(),
                         dbc.Col(
                             [
                                 dbc.Row(
