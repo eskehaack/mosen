@@ -310,7 +310,7 @@ def edit_modal():
             dbc.ModalHeader("Edit or delete data?"),
             dbc.ModalBody(
                 [
-                    html.P("Input barcode for user/product:"),
+                    html.P("Input barcode for user/product:", id="edit_text"),
                     dbc.Input(id="edit_input", placeholder="Barcode"),
                 ]
             ),

@@ -274,6 +274,7 @@ def open_bad_rows(trigger, data):
 @callback(
     Output("edit_data_modal", "is_open"),
     Output("edit_modal_row", "data"),
+    Output("edit_text", "children"),
     Input("edit_users", "n_clicks"),
     Input("edit_prods", "n_clicks"),
     Input("edit_modal_delete", "n_clicks"),
@@ -285,12 +286,13 @@ def open_edit_modal(open_user, open_prod, close_delete, close_edit):
     if trigger in ["edit_users", "edit_prods"] and any(
         [trig is not None for trig in [open_user, open_prod]]
     ):
-        return True, trigger.split("_")[1]
+        text = "user" if "user" in trigger else "product"
+        return True, trigger.split("_")[1], f"Input barcode for {text}"
     if trigger in ["edit_modal_delete", "edit_modal_edit"] and any(
         [trig is not None for trig in [close_delete, close_edit]]
     ):
-        return False, None
-    return no_update, no_update
+        return False, None, no_update
+    return no_update, no_update, no_update
 
 
 @callback(
