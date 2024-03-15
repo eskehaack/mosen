@@ -35,3 +35,12 @@ h1 {
     border-radius: 5px;
     text-align: center;
 }
+
+.btn-close {
+    opacity: 1;
+    filter: invert(1);
+}
+
+.btn {
+    border-radius: 5px;
+}
