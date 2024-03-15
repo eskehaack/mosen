@@ -120,22 +120,26 @@ def update_overview_graph(trans_modal_open, graph_col, average):
     Output("bad_password_alert", "is_open"),
     Output("bad_data_alert", "is_open"),
     Output({"index": ALL, "type": "bad_rows"}, "data"),
-    Input("confirm_settings", "n_clicks"),
+    Output("new_password_alert", "is_open"),
+    Input("confirm_new_password", "n_clicks"),
+    Input("display_bill_switch", "value"),
+    Input({"index": ALL, "type": "database_upload"}, "contents"),
+    Input({"index": ALL, "type": "database_upload"}, "id"),
     State("settings_password", "value"),
-    State("display_bill_switch", "value"),
-    State({"index": ALL, "type": "database_upload"}, "contents"),
-    State({"index": ALL, "type": "database_upload"}, "id"),
 )
-def update_settings(trigger, password, show_bill, db_tables, table_ids):
-    if trigger is None:
-        return None, no_update, no_update, [no_update] * 3
+def update_settings(pass_trigger, show_bill, db_tables, table_ids, password):
+    if (trigger := ctx.triggered_id) is None:
+        return None, no_update, no_update, [no_update] * 3, no_update
     open_warning_password = False
     if password is None or len(password) == 0:
         open_warning_password = True
         password = "OLProgram"
     update_values(password, show_bill)
+    if trigger == "confirm_new_password":
+        return None, no_update, no_update, [no_update] * 3, True
 
     bad_rows_list = [[], [], []]
+    open_warning_data = False
     for i, table in enumerate(db_tables):
         if table is None:
             continue
@@ -146,18 +150,14 @@ def update_settings(trigger, password, show_bill, db_tables, table_ids):
             response, bad_rows = upload_values(df, table_ids[i]["index"])
             open_warning_data = False if response == "success" else True
             bad_rows_list[i] = bad_rows
-    return True, open_warning_password, open_warning_data, bad_rows_list
+    return True, open_warning_password, open_warning_data, bad_rows_list, False
 
 
 @callback(
     Output({"index": MATCH, "type": "show_upload_file"}, "children"),
     Input({"index": MATCH, "type": "database_upload"}, "filename"),
-    Input("confirm_settings", "n_clicks"),
 )
-def show_new_upload(file, confirm):
-    trigger = ctx.triggered_id
-    if trigger == "confirm_settings":
-        return ""
+def show_new_upload(file):
     if file is not None and len(file) > 0:
         return str(file)
     else:

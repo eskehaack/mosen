@@ -248,7 +248,8 @@ def settings_settings_layout():
                                                 "index": "users",
                                                 "type": "show_upload_file",
                                             }
-                                        )
+                                        ),
+                                        width=4,
                                     ),
                                 ]
                             ),
@@ -268,7 +269,8 @@ def settings_settings_layout():
                                                 "index": "prods",
                                                 "type": "show_upload_file",
                                             }
-                                        )
+                                        ),
+                                        width=4,
                                     ),
                                 ]
                             ),
@@ -291,27 +293,10 @@ def settings_settings_layout():
                                                 "index": "transactions",
                                                 "type": "show_upload_file",
                                             }
-                                        )
+                                        ),
+                                        width=4,
                                     ),
                                 ]
-                            ),
-                            width=12,
-                        ),
-                        html.Hr(),
-                        dbc.Col(
-                            dbc.Row(
-                                [
-                                    dbc.Col(html.P("Password: "), width=4),
-                                    dbc.Col(
-                                        dbc.Input(
-                                            value=get_password(),
-                                            id="settings_password",
-                                            type="text",
-                                            minLength=1,
-                                        )
-                                    ),
-                                ],
-                                align="center",
                             ),
                             width=12,
                         ),
@@ -332,6 +317,33 @@ def settings_settings_layout():
                         ),
                         html.Hr(),
                         dbc.Col(
+                            dbc.Row(
+                                [
+                                    dbc.Col(html.P("Password: "), width=4),
+                                    dbc.Col(
+                                        dbc.Input(
+                                            value=get_password(),
+                                            id="settings_password",
+                                            type="text",
+                                            minLength=1,
+                                        ),
+                                        width=4,
+                                    ),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            "Confirm Password",
+                                            id="confirm_new_password",
+                                        ),
+                                        width=4,
+                                        align="center",
+                                    ),
+                                ],
+                                align="center",
+                            ),
+                            width=12,
+                        ),
+                        dbc.Col(html.Hr()),
+                        dbc.Col(
                             [
                                 dbc.Row(
                                     [
@@ -340,26 +352,17 @@ def settings_settings_layout():
                                                 "Export Barcodes",
                                                 id="export_barcodes_btn",
                                             ),
-                                            width=8,
+                                            width=6,
                                         ),
                                         dbc.Col(
-                                            dbc.Button(
-                                                "Confirm Settings",
-                                                id="confirm_settings",
-                                            )
+                                            dbc.Button("Close app", id="close_app_btn"),
+                                            width=6,
                                         ),
                                     ],
                                     align="center",
                                 ),
                             ],
                             width=12,
-                        ),
-                        html.Hr(),
-                        dbc.Row(
-                            dbc.Col(
-                                dbc.Button("Close app", id="close_app_btn"),
-                                width=8,
-                            ),
                         ),
                     ],
                     align="center",
@@ -371,12 +374,24 @@ def settings_settings_layout():
                 color="danger",
                 id="bad_password_alert",
                 is_open=False,
+                fade=True,
+                duration=4000,
             ),
             dbc.Alert(
                 "There was an error in the data that you uploaded, please check the input and try again",
                 color="danger",
                 id="bad_data_alert",
                 is_open=False,
+                fade=True,
+                duration=4000,
+            ),
+            dbc.Alert(
+                "You have succesfully updated the password!",
+                color="success",
+                id="new_password_alert",
+                is_open=False,
+                fade=True,
+                duration=4000,
             ),
             export_barcodes_mdl(),
             bad_rows_mdl(),
@@ -509,6 +524,8 @@ def layout_func():
                 color="danger",
                 id="bad_barcode_alert",
                 is_open=False,
+                fade=True,
+                duration=4000,
             ),
             dcc.Store(id="retain_focus_main", data=None),
             dcc.Store(id="retain_focus_prod", data=None),
