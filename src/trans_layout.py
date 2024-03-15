@@ -138,7 +138,7 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
     if trigger == "new_trans_inp":
         if len(user_barcodes) < 1:
             return no_update, "", no_update, True
-        if int(barcode_open) in user_barcodes:
+        if str(int(barcode_open)) in user_barcodes:
             reset_current_trans()
             return True, no_update, "", False
         return no_update, "", no_update, False
@@ -197,7 +197,7 @@ def new_trans(trigger, barcode, user_barcode):
                 {col: last.values[i] for i, col in enumerate(list(current.columns))}
             ]
             current = pd.concat([current, pd.DataFrame(data)], ignore_index=True)
-    elif int(barcode) not in list(prods["barcode"]):
+    elif str(int(barcode)) not in list(prods["barcode"]):
         return no_update, ""
     else:
         try:

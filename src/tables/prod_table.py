@@ -63,10 +63,10 @@ def open_prod_modal(new_prod, confirm, cancel, data):
 @callback(
     Output("confirm_prod", "disabled"),
     Input({"type": "prod_input", "index": ALL}, "value"),
-    State({"type": "prod_input", "index": f"inp_barcode_prod"}, "invalid"),
+    Input({"type": "prod_input", "index": f"inp_barcode_prod"}, "invalid"),
 )
 def enable_confirm(inps, invalid_barcode):
-    if None not in inps or invalid_barcode:
+    if None not in inps and not invalid_barcode:
         return False
     return True
 
@@ -106,9 +106,14 @@ def add_row(n_clicks, stock_trigger, vals, ids, edit_barcode):
     prevent_initial_callback=True,
 )
 def validate_barcode_prod(value):
-    data = get_prods().to_dict(orient="records")
-    bars = [row["barcode"] for row in data]
-    if value in bars or value is None or type(value) != int or len(str(value)) != 3:
+    bars = [row["barcode"] for row in get_prods().to_dict(orient="records")]
+    bars.extend([row["barcode_prod"] for row in get_trans().to_dict(orient="records")])
+    if (
+        str(value) in set(bars)
+        or value is None
+        or type(value) != int
+        or len(str(value)) != 3
+    ):
         return True
     return False
 

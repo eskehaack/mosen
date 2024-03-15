@@ -322,6 +322,8 @@ def edit_new_data_modals(delete, edit, table, barcode):
             indecies = row.index
             data.drop(indecies, inplace=True)
             upload_values(data, table)
+            if len(row) == 0:
+                return no_update, no_update, [no_update] * 4, [no_update] * 6
             row = list(row.values[0])
             return True, False, row, [no_update] * 6
         if table == "prods":
@@ -330,6 +332,8 @@ def edit_new_data_modals(delete, edit, table, barcode):
             indecies = row.index
             data.drop(indecies, inplace=True)
             upload_values(data, table)
+            if len(row) == 0:
+                return no_update, no_update, [no_update] * 4, [no_update] * 6
             row = list(row.values[0])
             return False, True, [no_update] * 4, row
     else:

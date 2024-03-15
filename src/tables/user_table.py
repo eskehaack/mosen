@@ -18,7 +18,7 @@ def init():
 )
 def open_user_modal(new_user, confirm, cancel, data):
     try:
-        barcode = max(pd.DataFrame(data)["barcode"]) + 1
+        barcode = int(max(pd.DataFrame(data)["barcode"])) + 1
     except KeyError:
         barcode = 1001
     trigger = ctx.triggered_id
@@ -33,11 +33,10 @@ def open_user_modal(new_user, confirm, cancel, data):
 @callback(
     Output("confirm_user", "disabled"),
     Input({"type": "user_input", "index": ALL}, "value"),
-    State({"type": "user_input", "index": ALL}, "id"),
-    State({"type": "user_input", "index": f"inp_barcode_user"}, "invalid"),
+    Input({"type": "user_input", "index": f"inp_barcode_user"}, "invalid"),
 )
-def enable_confirm(inps, ids, invalid_barcode):
-    if None not in inps or invalid_barcode:
+def enable_confirm(inps, invalid_barcode):
+    if None not in inps and not invalid_barcode:
         return False
     return True
 
@@ -76,8 +75,13 @@ def add_row(n_clicks, vals, ids, edit_barcode):
     prevent_initial_callback=True,
 )
 def validate_barcode_user(value):
-    data = get_users().to_dict(orient="records")
-    bars = [row["barcode"] for row in data]
-    if value in bars or value is None or type(value) != int or len(str(value)) != 4:
+    bars = [row["barcode"] for row in get_users().to_dict(orient="records")]
+    bars.extend([row["barcode_user"] for row in get_trans().to_dict(orient="records")])
+    if (
+        str(value) in set(bars)
+        or value is None
+        or type(value) != int
+        or len(str(value)) != 4
+    ):
         return True
     return False
