@@ -481,7 +481,12 @@ def layout_func():
                                 ],
                             ),
                             dbc.Row(
-                                dbc.Input(id="new_trans_inp", autoFocus=True),
+                                dbc.Input(
+                                    id="new_trans_inp",
+                                    autoFocus=True,
+                                    className="barcode-input",
+                                ),
+                                justify="center",
                             ),
                         ],
                         width=12,
