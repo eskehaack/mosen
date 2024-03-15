@@ -310,6 +310,7 @@ def settings_settings_layout():
                                         dbc.Switch(
                                             id="display_bill_switch",
                                             value=get_show_bill(),
+                                            className="d-grid gap-2 col-10 mx-auto",
                                         )
                                     ),
                                 ]
@@ -334,6 +335,7 @@ def settings_settings_layout():
                                         dbc.Button(
                                             "Confirm Password",
                                             id="confirm_new_password",
+                                            className="d-grid gap-2 col-10 mx-auto",
                                         ),
                                         width=4,
                                         align="center",
@@ -352,6 +354,7 @@ def settings_settings_layout():
                                             dbc.Button(
                                                 "Export Barcodes",
                                                 id="export_barcodes_btn",
+                                                className="d-grid gap-2 col-10 mx-auto",
                                             ),
                                             width=4,
                                         ),
@@ -360,11 +363,16 @@ def settings_settings_layout():
                                                 "Reset app",
                                                 id="reset_app",
                                                 color="danger",
+                                                className="d-grid gap-2 col-10 mx-auto",
                                             ),
                                             width=4,
                                         ),
                                         dbc.Col(
-                                            dbc.Button("Close app", id="close_app_btn"),
+                                            dbc.Button(
+                                                "Close app",
+                                                id="close_app_btn",
+                                                className="d-grid gap-2 col-10 mx-auto",
+                                            ),
                                             width=4,
                                         ),
                                     ],
