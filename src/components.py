@@ -40,6 +40,7 @@ def get_table(id, data, height):
             ]
         ),
         tooltip_duration=None,
+        sort_action="native",
     )
 
 
