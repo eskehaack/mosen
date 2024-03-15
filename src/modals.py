@@ -329,3 +329,34 @@ def edit_modal():
         is_open=False,
     )
     return mdl
+
+
+def reset_modal():
+    mdl = dbc.Modal(
+        [
+            dbc.ModalHeader("Reset Database and Delete All Data?"),
+            dbc.ModalBody(
+                [
+                    html.P("Are you sure you want to delete all data?"),
+                    html.Br(),
+                    html.P("This is irreversible!!"),
+                    html.Br(),
+                    html.P("The app will close down once it has been reset."),
+                ]
+            ),
+            dbc.ModalFooter(
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            dbc.Button("Delete", id="delete_data_btn", color="danger")
+                        ),
+                        dbc.Col(dbc.Button("Cancel", id="cancel_delete_data_btn")),
+                    ]
+                )
+            ),
+        ],
+        id="reset_data_modal",
+        size="md",
+        is_open=False,
+    )
+    return mdl

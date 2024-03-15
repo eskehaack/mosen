@@ -4,6 +4,7 @@ import pandas as pd
 from numpy import array
 from datetime import datetime
 import sqlite3
+import keyboard as k
 
 from src.tables.create_tables import table_defs
 
@@ -177,6 +178,8 @@ def validate_trans(row: dict, data: list):
 
 def check_db(data, con, cur):
     if len(data) == 0:
+        out = cur.execute("SELECT * FROM settings")
+        print(list(out.description))
         cur.execute("INSERT INTO settings VALUES ('OLProgram', 'True')")
         con.commit()
         print("updated database")
@@ -206,3 +209,13 @@ def update_values(password, show_bill):
     up = pd.DataFrame([{"password": password, "show_bill": str(show_bill)}])
     up.to_sql("settings", con=con, if_exists="replace")
     con.commit()
+
+
+def reset_all_tables():
+    con, cur = init()
+    for table in table_defs().keys():
+        cur.execute(f"DROP TABLE {table}")
+        con.commit()
+    con, cur = init()
+    k.unhook_all()
+    k.send("alt+f4")

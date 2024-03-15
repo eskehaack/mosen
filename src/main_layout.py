@@ -21,6 +21,7 @@ from src.modals import (
     export_barcodes_mdl,
     bad_rows_mdl,
     edit_modal,
+    reset_modal,
 )
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
@@ -352,11 +353,19 @@ def settings_settings_layout():
                                                 "Export Barcodes",
                                                 id="export_barcodes_btn",
                                             ),
-                                            width=6,
+                                            width=4,
+                                        ),
+                                        dbc.Col(
+                                            dbc.Button(
+                                                "Reset app",
+                                                id="reset_app",
+                                                color="danger",
+                                            ),
+                                            width=4,
                                         ),
                                         dbc.Col(
                                             dbc.Button("Close app", id="close_app_btn"),
-                                            width=6,
+                                            width=4,
                                         ),
                                     ],
                                     align="center",
@@ -395,6 +404,7 @@ def settings_settings_layout():
             ),
             export_barcodes_mdl(),
             bad_rows_mdl(),
+            reset_modal(),
         ]
     )
     return layout
@@ -577,8 +587,9 @@ def open_settings(trigger, trigger_enter, password):
     Input("setting_tabs", "value"),
     Input("confirm_prod", "n_clicks"),
     Input("confirm_user", "n_clicks"),
+    Input("delete_data_btn", "n_clicks"),
 )
-def update_settings_layout(trigger, prods_trigger, user_trigger):
+def update_settings_layout(trigger, prods_trigger, user_trigger, reset_trigger):
     time.sleep(1)
     return (
         user_settings_layout(),

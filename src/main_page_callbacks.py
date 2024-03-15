@@ -7,6 +7,7 @@ from src.data_connection import (
     get_users,
     upload_values,
     update_values,
+    reset_all_tables,
 )
 from src.tables.prod_table import get_waste
 from src.tables.trans_table import get_income
@@ -340,3 +341,22 @@ def edit_new_data_modals(delete, edit, table, barcode):
             return False, True, [no_update] * 4, row
     else:
         return no_update, no_update, [no_update] * 4, [no_update] * 6
+
+
+@callback(
+    Output("reset_data_modal", "is_open"),
+    Input("reset_app", "n_clicks"),
+    Input("delete_data_btn", "n_clicks"),
+    Input("cancel_delete_data_btn", "n_clicks"),
+)
+def reset_database(trigger, delete, cancel):
+    trigger = ctx.triggered_id
+    if trigger == "reset_app":
+        return True
+    elif trigger == "delete_data_btn":
+        reset_all_tables()
+        return False
+    elif trigger == "cancel_delete_data_btn":
+        return False
+    else:
+        return no_update
