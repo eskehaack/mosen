@@ -191,7 +191,10 @@ def new_trans(trigger, barcode, user_barcode):
     elif len(barcode) < 3:
         if len(current) == 0:
             return no_update, ""
-        for _ in range(int(barcode)):
+        last_barcode = current.iloc[len(current) - 1]["barcode_prod"]
+        current_amount = len(current[current["barcode_prod"] == str(last_barcode)])
+        addition = int(barcode) if current_amount > 1 else int(barcode) - 1
+        for _ in range(addition):
             last = current.iloc[len(current) - 1]
             data = [
                 {col: last.values[i] for i, col in enumerate(list(current.columns))}
