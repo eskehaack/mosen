@@ -602,8 +602,11 @@ def open_settings(trigger, trigger_enter, password):
     Input("confirm_prod", "n_clicks"),
     Input("confirm_user", "n_clicks"),
     Input("delete_data_btn", "n_clicks"),
+    Input("confirm_new_stock", "n_clicks"),
 )
-def update_settings_layout(trigger, prods_trigger, user_trigger, reset_trigger):
+def update_settings_layout(
+    trigger, prods_trigger, user_trigger, reset_trigger, stock_trigger
+):
     time.sleep(1)
     return (
         user_settings_layout(),
