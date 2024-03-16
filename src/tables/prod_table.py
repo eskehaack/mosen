@@ -1,10 +1,16 @@
 import pandas as pd
 from dash import callback, Output, Input, State, html, ctx, ALL, MATCH, no_update
-from src.data_connection import get_users, get_prods, get_trans, upload_values
+from src.data_connection import (
+    get_users,
+    get_prods,
+    get_trans,
+    upload_values,
+    update_values,
+)
 from src.tables.trans_table import get_currently_sold
 
 
-def get_waste():
+def calculate_waste():
     prods = get_prods()
     waste = sum(
         [
@@ -132,7 +138,7 @@ def open_stock(trigger_open, trigger_close, inps):
         prods = get_prods()
         prods["current_stock"] = list(inps)
         upload_values(prods, "prods")
-
-        n_users = len(get_users())
+        waste = calculate_waste()
+        update_values(waste=waste)
         return False
     return no_update

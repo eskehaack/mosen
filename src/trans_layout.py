@@ -3,7 +3,6 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-from src.tables.prod_table import get_waste
 from src.components import get_barcode, get_table
 from src.data_connection import (
     get_prods,
@@ -14,6 +13,7 @@ from src.data_connection import (
     upload_values,
     reset_current_trans,
     get_show_bill,
+    get_waste,
 )
 
 

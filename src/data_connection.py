@@ -179,8 +179,7 @@ def validate_trans(row: dict, data: list):
 def check_db(data, con, cur):
     if len(data) == 0:
         out = cur.execute("SELECT * FROM settings")
-        print(list(out.description))
-        cur.execute("INSERT INTO settings VALUES ('OLProgram', 'True')")
+        cur.execute("INSERT INTO settings VALUES ('OLProgram', 'True', '0')")
         con.commit()
         print("updated database")
         return False
@@ -204,11 +203,22 @@ def get_show_bill():
     return data[0][0] == "True"
 
 
-def update_values(password, show_bill):
+def get_waste():
     con, cur = init()
-    up = pd.DataFrame([{"password": password, "show_bill": str(show_bill)}])
-    up.to_sql("settings", con=con, if_exists="replace")
-    con.commit()
+    data = list(cur.execute("SELECT waste FROM settings"))
+    if not check_db(data, con, cur):
+        data = list(cur.execute("SELECT waste FROM settings"))
+    return int(data[0][0])
+
+
+def update_values(password=None, show_bill=None, waste=None):
+    con, cur = init()
+    inps = {"password": password, "show_bill": show_bill, "waste": waste}
+    for key, value in inps.items():
+        if value is None:
+            continue
+        cur.execute(f"""UPDATE settings SET "{key}" = '{value}'""")
+        con.commit()
 
 
 def reset_all_tables():

@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import os
-from src.tables.prod_table import get_waste, get_waste_table
+from src.tables.prod_table import get_waste_table
 from src.tables.trans_table import (
     get_revenue,
     get_income,
@@ -32,6 +32,7 @@ from src.data_connection import (
     get_users,
     get_password,
     get_show_bill,
+    get_waste,
 )
 from src.tables.user_table import init
 from app import app

@@ -8,8 +8,8 @@ from src.data_connection import (
     upload_values,
     update_values,
     reset_all_tables,
+    get_waste,
 )
-from src.tables.prod_table import get_waste
 from src.tables.trans_table import get_income
 from src.barcode_generator import generate_pdf
 
