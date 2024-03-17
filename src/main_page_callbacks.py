@@ -264,11 +264,11 @@ def export_barcodes(trigger, guest_barcodes):
 def open_bad_rows(trigger, data):
     if (
         trigger is None
-        or all([table is None for table in data])
-        or max([len(table) for table in data]) == 0
+        or max([0 if table is None else len(table) for table in data]) == 0
     ):
         return no_update, [no_update, no_update, no_update]
     else:
+        print(data)
         return True, data
 
 

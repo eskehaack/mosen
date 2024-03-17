@@ -269,34 +269,28 @@ def export_barcodes_mdl():
 
 
 def bad_rows_mdl():
+    tables = ["users", "prods", "transactions"]
+    table_defs = [
+        html.P(
+            "The following bad rows were detected in your upload. You can edit them manually, and reupload the file, if the below data is not what you wanted."
+        )
+    ]
+    for table in tables:
+        table_defs.extend(
+            [
+                html.Hr(),
+                html.P(table.title()),
+                html.Br(),
+                dash_table.DataTable(
+                    id={"index": table, "type": "bad_rows_table"},
+                    style_cell={"color": "black"},
+                ),
+            ]
+        )
     mdl = dbc.Modal(
         [
             dbc.ModalHeader("Bad Rows"),
-            dbc.ModalBody(
-                [
-                    html.P(
-                        "The following bad rows were detected in your upload. You can edit them manually if the below data is not what you wanted."
-                    ),
-                    html.Hr(),
-                    html.P("Users"),
-                    html.Br(),
-                    dash_table.DataTable(
-                        id={"index": "users", "type": "bad_rows_table"},
-                    ),
-                    html.Hr(),
-                    html.P("Products"),
-                    html.Br(),
-                    dash_table.DataTable(
-                        id={"index": "prods", "type": "bad_rows_table"},
-                    ),
-                    html.Hr(),
-                    html.P("Transactions"),
-                    html.Br(),
-                    dash_table.DataTable(
-                        id={"index": "transactions", "type": "bad_rows_table"},
-                    ),
-                ]
-            ),
+            dbc.ModalBody(table_defs),
         ],
         id="bad_rows_modal",
         size="lg",

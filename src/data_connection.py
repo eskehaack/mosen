@@ -122,6 +122,7 @@ def upload_values(data: list, table: str):
     }
 
     bad_rows = list()
+    good_rows = list()
     for row in data:
         row, bad = validation[table](row, data)
         for col, val in row.items():
@@ -130,8 +131,10 @@ def upload_values(data: list, table: str):
                 bad = True
         if bad:
             bad_rows.append(row)
+        else:
+            good_rows.append(row)
 
-    data = pd.DataFrame(data)
+    data = pd.DataFrame(good_rows)
     if n_cols[table] == len(data.columns):
         data.to_sql(name=table, con=con, if_exists="replace", index=False)
         con.commit()
@@ -173,7 +176,10 @@ def validate_prod(row: dict, data: list):
 
 
 def validate_trans(row: dict, data: list):
-    return row, True
+    prods = get_prods()
+    if str(row["barcode_prod"]) not in list(prods["barcode"]):
+        return row, True
+    return row, False
 
 
 def check_db(data, con, cur):
