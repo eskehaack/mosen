@@ -1,10 +1,11 @@
 import keyboard as k
+import time
 from dash import dcc, html, callback, Input, Output, State, ctx, no_update
 import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import os
-from src.tables.prod_table import get_waste, get_waste_table
+from src.tables.prod_table import get_waste_table
 from src.tables.trans_table import (
     get_revenue,
     get_income,
@@ -20,6 +21,7 @@ from src.modals import (
     export_barcodes_mdl,
     bad_rows_mdl,
     edit_modal,
+    reset_modal,
 )
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
@@ -30,6 +32,7 @@ from src.data_connection import (
     get_users,
     get_password,
     get_show_bill,
+    get_waste,
 )
 from src.tables.user_table import init
 from app import app
@@ -89,7 +92,6 @@ def user_settings_layout():
                 className="show_box",
             ),
             new_user_modal(),
-            edit_modal(),
             dcc.Store(id="edit_modal_row"),
             dcc.Store(id={"index": "users", "type": "bad_rows"}),
         ],
@@ -240,17 +242,16 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(html.P("Upload user database: ")),
-                                    html.Br(),
+                                    dbc.Col(html.P("Upload user database: "), width=4),
                                     dbc.Col(get_upload("users")),
-                                    html.Br(),
                                     dbc.Col(
                                         html.P(
                                             id={
                                                 "index": "users",
                                                 "type": "show_upload_file",
                                             }
-                                        )
+                                        ),
+                                        width=4,
                                     ),
                                 ]
                             ),
@@ -260,17 +261,18 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(html.P("Upload product database: ")),
-                                    html.Br(),
+                                    dbc.Col(
+                                        html.P("Upload product database: "), width=4
+                                    ),
                                     dbc.Col(get_upload("prods")),
-                                    html.Br(),
                                     dbc.Col(
                                         html.P(
                                             id={
                                                 "index": "prods",
                                                 "type": "show_upload_file",
                                             }
-                                        )
+                                        ),
+                                        width=4,
                                     ),
                                 ]
                             ),
@@ -283,17 +285,33 @@ def settings_settings_layout():
                                     dbc.Col(
                                         html.P(
                                             "Upload transaction database \n(not recommended): "
-                                        )
+                                        ),
+                                        width=4,
                                     ),
-                                    html.Br(),
                                     dbc.Col(get_upload("transactions")),
-                                    html.Br(),
                                     dbc.Col(
                                         html.P(
                                             id={
                                                 "index": "transactions",
                                                 "type": "show_upload_file",
                                             }
+                                        ),
+                                        width=4,
+                                    ),
+                                ]
+                            ),
+                            width=12,
+                        ),
+                        html.Hr(),
+                        dbc.Col(
+                            dbc.Row(
+                                [
+                                    dbc.Col(html.P("Display current bill: "), width=4),
+                                    dbc.Col(
+                                        dbc.Switch(
+                                            id="display_bill_switch",
+                                            value=get_show_bill(),
+                                            className="d-grid gap-2 col-10 mx-auto",
                                         )
                                     ),
                                 ]
@@ -304,33 +322,27 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(html.P("Password: ")),
-                                    html.Br(),
+                                    dbc.Col(html.P("Password: "), width=4),
                                     dbc.Col(
                                         dbc.Input(
                                             value=get_password(),
                                             id="settings_password",
                                             type="text",
                                             minLength=1,
-                                        )
+                                        ),
+                                        width=4,
                                     ),
-                                ]
-                            ),
-                            width=12,
-                        ),
-                        html.Hr(),
-                        dbc.Col(
-                            dbc.Row(
-                                [
-                                    dbc.Col(html.P("Display current bill: ")),
-                                    html.Br(),
                                     dbc.Col(
-                                        dbc.Switch(
-                                            id="display_bill_switch",
-                                            value=get_show_bill(),
-                                        )
+                                        dbc.Button(
+                                            "Confirm Password",
+                                            id="confirm_new_password",
+                                            className="d-grid gap-2 col-10 mx-auto",
+                                        ),
+                                        width=4,
+                                        align="center",
                                     ),
-                                ]
+                                ],
+                                align="center",
                             ),
                             width=12,
                         ),
@@ -343,29 +355,35 @@ def settings_settings_layout():
                                             dbc.Button(
                                                 "Export Barcodes",
                                                 id="export_barcodes_btn",
+                                                className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=8,
+                                            width=4,
                                         ),
-                                        html.Br(),
                                         dbc.Col(
                                             dbc.Button(
-                                                "Confirm Settings",
-                                                id="confirm_settings",
-                                            )
+                                                "Reset app",
+                                                id="reset_app",
+                                                color="danger",
+                                                className="d-grid gap-2 col-10 mx-auto",
+                                            ),
+                                            width=4,
                                         ),
-                                    ]
-                                ),
-                                html.Hr(),
-                                dbc.Row(
-                                    dbc.Col(
-                                        dbc.Button("Close app", id="close_app_btn"),
-                                        width=8,
-                                    ),
+                                        dbc.Col(
+                                            dbc.Button(
+                                                "Close app",
+                                                id="close_app_btn",
+                                                className="d-grid gap-2 col-10 mx-auto",
+                                            ),
+                                            width=4,
+                                        ),
+                                    ],
+                                    align="center",
                                 ),
                             ],
                             width=12,
                         ),
-                    ]
+                    ],
+                    align="center",
                 ),
                 className="show_box",
             ),
@@ -374,15 +392,28 @@ def settings_settings_layout():
                 color="danger",
                 id="bad_password_alert",
                 is_open=False,
+                fade=True,
+                duration=4000,
             ),
             dbc.Alert(
                 "There was an error in the data that you uploaded, please check the input and try again",
                 color="danger",
                 id="bad_data_alert",
                 is_open=False,
+                fade=True,
+                duration=4000,
+            ),
+            dbc.Alert(
+                "You have succesfully updated the password!",
+                color="success",
+                id="new_password_alert",
+                is_open=False,
+                fade=True,
+                duration=4000,
             ),
             export_barcodes_mdl(),
             bad_rows_mdl(),
+            reset_modal(),
         ]
     )
     return layout
@@ -451,7 +482,12 @@ def layout_func():
                                 ],
                             ),
                             dbc.Row(
-                                dbc.Input(id="new_trans_inp", autoFocus=True),
+                                dbc.Input(
+                                    id="new_trans_inp",
+                                    autoFocus=True,
+                                    className="barcode-input",
+                                ),
+                                justify="center",
                             ),
                         ],
                         width=12,
@@ -505,12 +541,15 @@ def layout_func():
             settings_mode_func(),
             trans_modal(),
             password_modal(),
+            edit_modal(),
             dcc.Store(id="update_settings"),
             dbc.Alert(
                 "There are no users, ya dumb dumb!",
                 color="danger",
                 id="bad_barcode_alert",
                 is_open=False,
+                fade=True,
+                duration=4000,
             ),
             dcc.Store(id="retain_focus_main", data=None),
             dcc.Store(id="retain_focus_prod", data=None),
@@ -524,13 +563,16 @@ def layout_func():
     Output("password_modal", "is_open"),
     Input("open_settings", "n_clicks"),
     Input("confirm_password", "n_clicks"),
+    Input("password_input", "n_submit"),
     State("password_input", "value"),
 )
-def open_settings(trigger_open, trigger_close, password):
+def open_password(trigger_open, trigger_close, trigger_enter, password):
     trigger = ctx.triggered_id
     if trigger is not None and trigger == "open_settings":
         return True
-    elif trigger is not None and trigger == "confirm_password":
+    elif trigger is not None and (
+        trigger == "confirm_password" or trigger == "password_input"
+    ):
         if password == get_password():
             return False
     return no_update
@@ -540,10 +582,13 @@ def open_settings(trigger_open, trigger_close, password):
     Output("settings_modal", "is_open"),
     Output("password_input", "value"),
     Input("confirm_password", "n_clicks"),
+    Input("password_input", "n_submit"),
     State("password_input", "value"),
 )
-def open_settings(trigger, password):
-    if trigger is not None and trigger > 0:
+def open_settings(trigger, trigger_enter, password):
+    if (trigger is not None and trigger > 0) or (
+        trigger_enter is not None and trigger_enter > 0
+    ):
         if password == get_password():
             return True, ""
     return False, no_update
@@ -554,8 +599,15 @@ def open_settings(trigger, password):
     Output("product_settings", "children"),
     Output("economy_settings", "children"),
     Input("setting_tabs", "value"),
+    Input("confirm_prod", "n_clicks"),
+    Input("confirm_user", "n_clicks"),
+    Input("delete_data_btn", "n_clicks"),
+    Input("confirm_new_stock", "n_clicks"),
 )
-def update_trans_table(trigger):
+def update_settings_layout(
+    trigger, prods_trigger, user_trigger, reset_trigger, stock_trigger
+):
+    time.sleep(1)
     return (
         user_settings_layout(),
         product_settings_layout(),

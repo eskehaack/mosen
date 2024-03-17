@@ -3,7 +3,6 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-from src.tables.prod_table import get_waste
 from src.components import get_barcode, get_table
 from src.data_connection import (
     get_prods,
@@ -14,6 +13,7 @@ from src.data_connection import (
     upload_values,
     reset_current_trans,
     get_show_bill,
+    get_waste,
 )
 
 
@@ -63,7 +63,7 @@ def trans_modal():
                     ),
                     dbc.Row(
                         dbc.Input(
-                            placeholder="Product barcode",
+                            placeholder="Barcode",
                             id="prod_barcode",
                             autoFocus=True,
                         ),
@@ -101,7 +101,7 @@ def get_transactions(trigger, barcode):
                     (
                         1
                         if p
-                        == prods[prods["barcode"] == int(row["barcode_prod"])][
+                        == prods[prods["barcode"] == str(row["barcode_prod"])][
                             "name"
                         ].values[0]
                         else 0
@@ -138,7 +138,7 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
     if trigger == "new_trans_inp":
         if len(user_barcodes) < 1:
             return no_update, "", no_update, True
-        if int(barcode_open) in user_barcodes:
+        if str(int(barcode_open)) in user_barcodes:
             reset_current_trans()
             return True, no_update, "", False
         return no_update, "", no_update, False
@@ -150,7 +150,7 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
                         "barcode_user": barcode_open,
                         "barcode_prod": row["barcode_prod"],
                         "price": str(
-                            prods[prods["barcode"] == int(row["barcode_prod"])][
+                            prods[prods["barcode"] == str(row["barcode_prod"])][
                                 "price"
                             ].values[0]
                         ),
@@ -191,17 +191,20 @@ def new_trans(trigger, barcode, user_barcode):
     elif len(barcode) < 3:
         if len(current) == 0:
             return no_update, ""
-        for _ in range(int(barcode)):
+        last_barcode = current.iloc[len(current) - 1]["barcode_prod"]
+        current_amount = len(current[current["barcode_prod"] == str(last_barcode)])
+        addition = int(barcode) if current_amount > 1 else int(barcode) - 1
+        for _ in range(addition):
             last = current.iloc[len(current) - 1]
             data = [
                 {col: last.values[i] for i, col in enumerate(list(current.columns))}
             ]
             current = pd.concat([current, pd.DataFrame(data)], ignore_index=True)
-    elif int(barcode) not in list(prods["barcode"]):
+    elif str(int(barcode)) not in list(prods["barcode"]):
         return no_update, ""
     else:
         try:
-            product = prods[prods["barcode"] == int(barcode)]
+            product = prods[prods["barcode"] == str(barcode)]
         except:
             return no_update, "", no_update
         name = str(product["name"].values[0])
@@ -226,23 +229,31 @@ def new_trans(trigger, barcode, user_barcode):
     State("new_trans_inp", "value"),
 )
 def show_balance(trigger, user_id):
-    if trigger is not None and get_show_bill():
-        trans = get_trans()
-        users = get_users()
-        prods = get_prods()
-        price_dict = {str(p["barcode"]): p["price"] for _, p in prods.iterrows()}
-        trans["price"] = trans["barcode_prod"].apply(
-            lambda x: price_dict[str(x)] if str(x) in list(price_dict.keys()) else 0
-        )
+    if trigger is not None:
+        if not get_show_bill():
+            users = get_users()
+            try:
+                user = str(users[users["barcode"] == str(user_id)]["name"].values[0])
+            except:
+                return no_update
+            return str(user)
+        else:
+            trans = get_trans()
+            users = get_users()
+            prods = get_prods()
+            price_dict = {str(p["barcode"]): p["price"] for _, p in prods.iterrows()}
+            trans["price"] = trans["barcode_prod"].apply(
+                lambda x: price_dict[str(x)] if str(x) in list(price_dict.keys()) else 0
+            )
 
-        user_waste = 0 if len(users) == 0 else get_waste() / len(users)
-        user_id = get_barcode(user_id)
-        try:
-            user = str(users[users["barcode"] == int(user_id)]["name"].values[0])
-        except:
-            return no_update
-        user_balance = sum(
-            map(int, trans[trans["barcode_user"] == str(user_id)]["price"])
-        )
-        return f"{user} - Current bill is approximately: {round(user_balance + user_waste)}"
+            user_waste = 0 if len(users) == 0 else get_waste() / len(users)
+            user_id = get_barcode(user_id)
+            try:
+                user = str(users[users["barcode"] == str(user_id)]["name"].values[0])
+            except:
+                return no_update
+            user_balance = sum(
+                map(int, trans[trans["barcode_user"] == str(user_id)]["price"])
+            )
+            return f"{user} - Current bill is approximately: {max(0, round(user_balance + user_waste))}"
     return no_update

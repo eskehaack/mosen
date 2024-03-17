@@ -12,6 +12,7 @@ user_body = [
         type="number",
         min=1000,
         max=99999999999,
+        invalid=True,
     ),
     html.Hr(),
     dbc.Input(placeholder="Name", id={"type": "user_input", "index": f"inp_name_user"}),
@@ -20,7 +21,8 @@ user_body = [
 for col in USER_COLS:
     user_body.append(
         dbc.Input(
-            placeholder=col, id={"type": "user_input", "index": f"inp_{col}_user"}
+            placeholder=col.replace("_", " ").title(),
+            id={"type": "user_input", "index": f"inp_{col}_user"},
         )
     )
     user_body.append(html.Hr())
@@ -60,6 +62,7 @@ prod_body = [
         type="number",
         min=100,
         max=999,
+        invalid=True,
     ),
     html.Hr(),
     dbc.Input(placeholder="Name", id={"type": "prod_input", "index": f"inp_name_prod"}),
@@ -68,7 +71,10 @@ prod_body = [
 for col in PROD_COLS:
     prod_body.append(
         dbc.Input(
-            placeholder=col, id={"type": "prod_input", "index": f"inp_{col}_prod"}
+            placeholder=col.replace("_", " ").title()
+            + ("(typically same as Initial Stock)" if col == "current_stock" else ""),
+            id={"type": "prod_input", "index": f"inp_{col}_prod"},
+            type="text" if col == "category" else "number",
         )
     )
     prod_body.append(html.Hr())
@@ -163,7 +169,12 @@ def password_modal():
         [
             dbc.ModalHeader("Input Password"),
             dbc.ModalBody(
-                dbc.Input(placeholder="Password", type="password", id="password_input")
+                dbc.Input(
+                    placeholder="Password",
+                    type="password",
+                    id="password_input",
+                    autofocus=True,
+                )
             ),
             dbc.ModalFooter(
                 dbc.Row([dbc.Col(dbc.Button("Confirm", id="confirm_password"))])
@@ -258,34 +269,28 @@ def export_barcodes_mdl():
 
 
 def bad_rows_mdl():
+    tables = ["users", "prods", "transactions"]
+    table_defs = [
+        html.P(
+            "The following bad rows were detected in your upload. You can edit them manually, and reupload the file, if the below data is not what you wanted."
+        )
+    ]
+    for table in tables:
+        table_defs.extend(
+            [
+                html.Hr(),
+                html.P(table.title()),
+                html.Br(),
+                dash_table.DataTable(
+                    id={"index": table, "type": "bad_rows_table"},
+                    style_cell={"color": "black"},
+                ),
+            ]
+        )
     mdl = dbc.Modal(
         [
             dbc.ModalHeader("Bad Rows"),
-            dbc.ModalBody(
-                [
-                    html.P(
-                        "The following bad rows were detected in your upload. You can edit them manually if the below data is not what you wanted."
-                    ),
-                    html.Hr(),
-                    html.P("Users"),
-                    html.Br(),
-                    dash_table.DataTable(
-                        id={"index": "users", "type": "bad_rows_table"},
-                    ),
-                    html.Hr(),
-                    html.P("Products"),
-                    html.Br(),
-                    dash_table.DataTable(
-                        id={"index": "prods", "type": "bad_rows_table"},
-                    ),
-                    html.Hr(),
-                    html.P("Transactions"),
-                    html.Br(),
-                    dash_table.DataTable(
-                        id={"index": "transactions", "type": "bad_rows_table"},
-                    ),
-                ]
-            ),
+            dbc.ModalBody(table_defs),
         ],
         id="bad_rows_modal",
         size="lg",
@@ -299,7 +304,7 @@ def edit_modal():
             dbc.ModalHeader("Edit or delete data?"),
             dbc.ModalBody(
                 [
-                    html.P("Input barcode for user/product:"),
+                    html.P("Input barcode for user/product:", id="edit_text"),
                     dbc.Input(id="edit_input", placeholder="Barcode"),
                 ]
             ),
@@ -315,6 +320,37 @@ def edit_modal():
         ],
         id="edit_data_modal",
         size="lg",
+        is_open=False,
+    )
+    return mdl
+
+
+def reset_modal():
+    mdl = dbc.Modal(
+        [
+            dbc.ModalHeader("Reset Database and Delete All Data?"),
+            dbc.ModalBody(
+                [
+                    html.P("Are you sure you want to delete all data?"),
+                    html.Br(),
+                    html.P("This is irreversible!!"),
+                    html.Br(),
+                    html.P("The app will close down once it has been reset."),
+                ]
+            ),
+            dbc.ModalFooter(
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            dbc.Button("Delete", id="delete_data_btn", color="danger")
+                        ),
+                        dbc.Col(dbc.Button("Cancel", id="cancel_delete_data_btn")),
+                    ]
+                )
+            ),
+        ],
+        id="reset_data_modal",
+        size="md",
         is_open=False,
     )
     return mdl

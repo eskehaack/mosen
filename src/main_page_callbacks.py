@@ -7,8 +7,9 @@ from src.data_connection import (
     get_users,
     upload_values,
     update_values,
+    reset_all_tables,
+    get_waste,
 )
-from src.tables.prod_table import get_waste
 from src.tables.trans_table import get_income
 from src.barcode_generator import generate_pdf
 
@@ -32,18 +33,20 @@ def create_overview(plot_col, average=False):
         return ret
 
     if plot_col == "products":
-        ranks = [f"{cat}_" for cat in list(prods["category"].unique())]
+        text = lambda x: f"{x} category"
+        ranks = [text(cat) for cat in list(prods["category"].unique())]
         rank_dict = {
-            str(row["barcode"]): f'{row["category"]}_' for i, row in prods.iterrows()
+            str(row["barcode"]): text(row["category"]) for i, row in prods.iterrows()
         }
         transactions["rank"] = transactions["barcode_prod"].apply(
             translation, t_dict=rank_dict
         )
 
     else:
-        ranks = [f"{rank}_" for rank in list(users[str(plot_col)].unique())]
+        text = lambda x: f"{x} {plot_col.lower()}"
+        ranks = [text(rank) for rank in list(users[str(plot_col)].unique())]
         rank_dict = {
-            str(row["barcode"]): f"{row[str(plot_col)]}_" for i, row in users.iterrows()
+            str(row["barcode"]): text(row[str(plot_col)]) for i, row in users.iterrows()
         }
 
         transactions["rank"] = transactions["barcode_user"].apply(
@@ -94,7 +97,7 @@ def create_overview(plot_col, average=False):
             ]
 
     y = [
-        prods[prods["barcode"] == int(p)]["name"].values[0]
+        prods[prods["barcode"] == str(p)]["name"].values[0]
         for p in transactions["barcode_prod"]
     ]
     return px.bar(overview_df, x=ranks, y=y)
@@ -118,22 +121,26 @@ def update_overview_graph(trans_modal_open, graph_col, average):
     Output("bad_password_alert", "is_open"),
     Output("bad_data_alert", "is_open"),
     Output({"index": ALL, "type": "bad_rows"}, "data"),
-    Input("confirm_settings", "n_clicks"),
+    Output("new_password_alert", "is_open"),
+    Input("confirm_new_password", "n_clicks"),
+    Input("display_bill_switch", "value"),
+    Input({"index": ALL, "type": "database_upload"}, "contents"),
+    Input({"index": ALL, "type": "database_upload"}, "id"),
     State("settings_password", "value"),
-    State("display_bill_switch", "value"),
-    State({"index": ALL, "type": "database_upload"}, "contents"),
-    State({"index": ALL, "type": "database_upload"}, "id"),
 )
-def update_settings(trigger, password, show_bill, db_tables, table_ids):
-    if trigger is None:
-        return None, no_update, no_update, [no_update] * 3
+def update_settings(pass_trigger, show_bill, db_tables, table_ids, password):
+    if (trigger := ctx.triggered_id) is None:
+        return None, no_update, no_update, [no_update] * 3, no_update
     open_warning_password = False
     if password is None or len(password) == 0:
         open_warning_password = True
         password = "OLProgram"
     update_values(password, show_bill)
+    if trigger == "confirm_new_password":
+        return None, no_update, no_update, [no_update] * 3, True
 
     bad_rows_list = [[], [], []]
+    open_warning_data = False
     for i, table in enumerate(db_tables):
         if table is None:
             continue
@@ -144,18 +151,14 @@ def update_settings(trigger, password, show_bill, db_tables, table_ids):
             response, bad_rows = upload_values(df, table_ids[i]["index"])
             open_warning_data = False if response == "success" else True
             bad_rows_list[i] = bad_rows
-    return True, open_warning_password, open_warning_data, bad_rows_list
+    return True, open_warning_password, open_warning_data, bad_rows_list, False
 
 
 @callback(
     Output({"index": MATCH, "type": "show_upload_file"}, "children"),
     Input({"index": MATCH, "type": "database_upload"}, "filename"),
-    Input("confirm_settings", "n_clicks"),
 )
-def show_new_upload(file, confirm):
-    trigger = ctx.triggered_id
-    if trigger == "confirm_settings":
-        return ""
+def show_new_upload(file):
     if file is not None and len(file) > 0:
         return str(file)
     else:
@@ -261,33 +264,36 @@ def export_barcodes(trigger, guest_barcodes):
 def open_bad_rows(trigger, data):
     if (
         trigger is None
-        or all([table is None for table in data])
-        or max([len(table) for table in data]) == 0
+        or max([0 if table is None else len(table) for table in data]) == 0
     ):
         return no_update, [no_update, no_update, no_update]
     else:
+        print(data)
         return True, data
 
 
 @callback(
     Output("edit_data_modal", "is_open"),
     Output("edit_modal_row", "data"),
+    Output("edit_text", "children"),
     Input("edit_users", "n_clicks"),
     Input("edit_prods", "n_clicks"),
     Input("edit_modal_delete", "n_clicks"),
     Input("edit_modal_edit", "n_clicks"),
+    prevent_initial_call=True,
 )
 def open_edit_modal(open_user, open_prod, close_delete, close_edit):
     trigger = ctx.triggered_id
     if trigger in ["edit_users", "edit_prods"] and any(
         [trig is not None for trig in [open_user, open_prod]]
     ):
-        return True, trigger.split("_")[1]
+        text = "user" if "user" in trigger else "product"
+        return True, trigger.split("_")[1], f"Input barcode for {text}"
     if trigger in ["edit_modal_delete", "edit_modal_edit"] and any(
         [trig is not None for trig in [close_delete, close_edit]]
     ):
-        return False, None
-    return no_update, no_update
+        return False, None, no_update
+    return no_update, no_update, no_update
 
 
 @callback(
@@ -307,26 +313,50 @@ def edit_new_data_modals(delete, edit, table, barcode):
         if table == "users":
             data = get_users()
         elif table == "prods":
-            data = get_users()
-        indecies = data[data["barcode"] == int(barcode)].index
+            data = get_prods()
+        indecies = data[data["barcode"] == str(barcode)].index
         data.drop(indecies, inplace=True)
         upload_values(data, table)
         return no_update, no_update, [no_update] * 4, [no_update] * 6
     elif trigger == "edit_modal_edit" and barcode is not None:
         if table == "users":
             data = get_users()
-            row = data[data["barcode"] == int(barcode)]
+            row = data[data["barcode"] == str(barcode)]
             indecies = row.index
             data.drop(indecies, inplace=True)
             upload_values(data, table)
+            if len(row) == 0:
+                return no_update, no_update, [no_update] * 4, [no_update] * 6
             row = list(row.values[0])
             return True, False, row, [no_update] * 6
         if table == "prods":
-            row = data[data["barcode"] == int(barcode)]
+            data = get_prods()
+            row = data[data["barcode"] == str(barcode)]
             indecies = row.index
             data.drop(indecies, inplace=True)
             upload_values(data, table)
+            if len(row) == 0:
+                return no_update, no_update, [no_update] * 4, [no_update] * 6
             row = list(row.values[0])
             return False, True, [no_update] * 4, row
     else:
         return no_update, no_update, [no_update] * 4, [no_update] * 6
+
+
+@callback(
+    Output("reset_data_modal", "is_open"),
+    Input("reset_app", "n_clicks"),
+    Input("delete_data_btn", "n_clicks"),
+    Input("cancel_delete_data_btn", "n_clicks"),
+)
+def reset_database(trigger, delete, cancel):
+    trigger = ctx.triggered_id
+    if trigger == "reset_app":
+        return True
+    elif trigger == "delete_data_btn":
+        reset_all_tables()
+        return False
+    elif trigger == "cancel_delete_data_btn":
+        return False
+    else:
+        return no_update

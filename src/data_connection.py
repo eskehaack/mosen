@@ -4,6 +4,7 @@ import pandas as pd
 from numpy import array
 from datetime import datetime
 import sqlite3
+import keyboard as k
 
 from src.tables.create_tables import table_defs
 
@@ -32,7 +33,6 @@ def init():
 
 def get_prods():
     con, cur = init()
-    data = pd.DataFrame(cur.execute("SELECT * FROM prods"))
     cols = [
         "barcode",
         "name",
@@ -41,8 +41,9 @@ def get_prods():
         "current_stock",
         "initial_stock",
     ]
+    data = pd.DataFrame(cur.execute("SELECT * FROM prods"), columns=cols, dtype=str)
     if len(data) == 0:
-        data = pd.DataFrame(columns=cols)
+        data = pd.DataFrame(columns=cols, dtype=str)
     else:
         data.columns = cols
     return data
@@ -50,15 +51,17 @@ def get_prods():
 
 def get_trans():
     con, cur = init()
-    data = pd.DataFrame(cur.execute("SELECT * FROM transactions"))
     cols = [
         "barcode_user",
         "barcode_prod",
         "price",
         "timestamp",
     ]
+    data = pd.DataFrame(
+        cur.execute("SELECT * FROM transactions"), columns=cols, dtype=str
+    )
     if len(data) == 0:
-        data = pd.DataFrame(columns=cols)
+        data = pd.DataFrame(columns=cols, dtype=str)
     else:
         data.columns = cols
     return data
@@ -66,10 +69,10 @@ def get_trans():
 
 def get_users():
     con, cur = init()
-    data = pd.DataFrame(cur.execute("SELECT * FROM users"))
     cols = ["barcode", "name", "rank", "team"]
+    data = pd.DataFrame(cur.execute("SELECT * FROM users"), columns=cols, dtype=str)
     if len(data) == 0:
-        data = pd.DataFrame(columns=cols)
+        data = pd.DataFrame(columns=cols, dtype=str)
     else:
         data.columns = cols
     return data
@@ -77,10 +80,10 @@ def get_users():
 
 def get_current_trans():
     con, cur = init()
-    data = pd.DataFrame(cur.execute("SELECT * FROM temporary"))
     cols = ["barcode_prod", "name"]
+    data = pd.DataFrame(cur.execute("SELECT * FROM temporary"), columns=cols, dtype=str)
     if len(data) == 0:
-        data = pd.DataFrame(columns=cols)
+        data = pd.DataFrame(columns=cols, dtype=str)
     else:
         data.columns = cols
     return data
@@ -119,6 +122,7 @@ def upload_values(data: list, table: str):
     }
 
     bad_rows = list()
+    good_rows = list()
     for row in data:
         row, bad = validation[table](row, data)
         for col, val in row.items():
@@ -127,8 +131,10 @@ def upload_values(data: list, table: str):
                 bad = True
         if bad:
             bad_rows.append(row)
+        else:
+            good_rows.append(row)
 
-    data = pd.DataFrame(data)
+    data = pd.DataFrame(good_rows)
     if n_cols[table] == len(data.columns):
         data.to_sql(name=table, con=con, if_exists="replace", index=False)
         con.commit()
@@ -170,16 +176,16 @@ def validate_prod(row: dict, data: list):
 
 
 def validate_trans(row: dict, data: list):
-    try:
-        row["timestamp"] = str(datetime.strptime(row["timestamp"], "%d/%m/%Y %H:%M:%S"))
-    except:
-        row["timestamp"] = str(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-    return row, True
+    prods = get_prods()
+    if str(row["barcode_prod"]) not in list(prods["barcode"]):
+        return row, True
+    return row, False
 
 
 def check_db(data, con, cur):
     if len(data) == 0:
-        cur.execute("INSERT INTO settings VALUES ('OLProgram', TRUE)")
+        out = cur.execute("SELECT * FROM settings")
+        cur.execute("INSERT INTO settings VALUES ('OLProgram', 'True', '0')")
         con.commit()
         print("updated database")
         return False
@@ -200,11 +206,32 @@ def get_show_bill():
     data = list(cur.execute("SELECT show_bill FROM settings"))
     if not check_db(data, con, cur):
         data = list(cur.execute("SELECT show_bill FROM settings"))
-    return bool(data[0])
+    return data[0][0] == "True"
 
 
-def update_values(password, show_bill):
+def get_waste():
     con, cur = init()
-    up = pd.DataFrame([{"password": password, "show_bill": show_bill}])
-    up.to_sql("settings", con=con, if_exists="replace")
-    con.commit()
+    data = list(cur.execute("SELECT waste FROM settings"))
+    if not check_db(data, con, cur):
+        data = list(cur.execute("SELECT waste FROM settings"))
+    return int(data[0][0])
+
+
+def update_values(password=None, show_bill=None, waste=None):
+    con, cur = init()
+    inps = {"password": password, "show_bill": show_bill, "waste": waste}
+    for key, value in inps.items():
+        if value is None:
+            continue
+        cur.execute(f"""UPDATE settings SET "{key}" = '{value}'""")
+        con.commit()
+
+
+def reset_all_tables():
+    con, cur = init()
+    for table in table_defs().keys():
+        cur.execute(f"DROP TABLE {table}")
+        con.commit()
+    con, cur = init()
+    k.unhook_all()
+    k.send("alt+f4")

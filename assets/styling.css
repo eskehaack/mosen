@@ -4,6 +4,7 @@
 
 body {
     background-color: var(--bgcol);
+    padding: 10px;
 }
 
 h1 {
@@ -21,8 +22,39 @@ h1 {
     background-color: white;
     color: black;
     border-radius: 10px;
+    justify-items: center;
 }
 
 .tab-container {
     color: black
+}
+
+.upload-field {
+    width: 100%;
+    border-width: 1px;
+    border-style: dashed;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.btn-close {
+    opacity: 1;
+    filter: invert(1);
+}
+
+.btn {
+    border-radius: 5px;
+}
+
+.barcode-input {
+    width: 83vw;
+}
+
+.show_box hr {
+    height: 2px;
+    width: 97%;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 2px;
 }
