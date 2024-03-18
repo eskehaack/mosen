@@ -36,7 +36,7 @@ def get_waste_table():
                 - int(p["current_stock"])
                 - get_currently_sold(p)
             ),
-            "Amount": n_waste * int(p["price"]),
+            "Amount": n_waste * float(p["price"]),
         }
         for _, p in prods.iterrows()
     ]
