@@ -35,7 +35,7 @@ if __name__ == "__main__":
     else:
         threading.Thread(target=run_my_server, daemon=True).start()
         webview.create_window(
-            "The Swamp Machine",
+            "Mosemaskinen",
             "http://127.0.0.1:8050",
             fullscreen=True,
             frameless=True,

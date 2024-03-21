@@ -55,24 +55,26 @@ def generate_pdf(type, pdf_filename="output.pdf", number_of_guest_codes=0):
         return
 
     if type == "users" or type == "guests":
-        x_0, y_0 = 60, 720
-        width_nr, height_nr = 4, 10
-        step_x, step_y = 120, 70
-        width, height = 110, 50
+        x_0, y_0 = 50, 740
+        width_nr, height_nr = 4, 11
+        step_x, step_y = 130, 70
+        width, height = 120, 50
 
         x_text_displacement = lambda x: x + int(width / 2)
         y_text_displacement = lambda y: y + 2
-        font_size = 10
+        font_size = 11
         show_boundary = True
 
         def text_func(x, y):
-            if len(y) < 11:
+            if len(y) < 12:
                 return f"{x} - {y}"
-            initials = ".".join(
-                [letters[0].upper() for letters in y.split(" ")[1:]][-3:]
-            )
-            name = f"{y.split(' ')[0][:5]}. {initials}"
-            return f"{x} - {name}"
+            for letters in y.split(" ")[1:][-3:]:
+                initials = ".".join(letters[0].upper())
+                if len(y.split(' ')[0]) < 12: 
+                    name = f"{y.split(' ')[0][:11]} {initials}."
+                else:
+                    name = f"{y.split(' ')[0][:11]}. {initials}."
+                return f"{x} - {name}"
 
     else:
         x_0, y_0 = 300, 720
@@ -116,8 +118,8 @@ def generate_pdf(type, pdf_filename="output.pdf", number_of_guest_codes=0):
         c.drawCentredString(
             x=x_text_displacement(x),
             y=y_text_displacement(y),
-            text=text_func(number, names[i]),
-        )
+            text=text_func(number, names[i])
+            )
     c.save()
 
 
