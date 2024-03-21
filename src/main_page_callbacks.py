@@ -320,11 +320,8 @@ def edit_new_data_modals(delete, edit, table, barcode):
         return no_update, no_update, [no_update] * 4, [no_update] * 6
     elif trigger == "edit_modal_edit" and barcode is not None:
         if table == "users":
-            data = get_users()
+            data = get_prods()
             row = data[data["barcode"] == str(barcode)]
-            indecies = row.index
-            data.drop(indecies, inplace=True)
-            upload_values(data, table)
             if len(row) == 0:
                 return no_update, no_update, [no_update] * 4, [no_update] * 6
             row = list(row.values[0])
@@ -332,9 +329,6 @@ def edit_new_data_modals(delete, edit, table, barcode):
         if table == "prods":
             data = get_prods()
             row = data[data["barcode"] == str(barcode)]
-            indecies = row.index
-            data.drop(indecies, inplace=True)
-            upload_values(data, table)
             if len(row) == 0:
                 return no_update, no_update, [no_update] * 4, [no_update] * 6
             row = list(row.values[0])

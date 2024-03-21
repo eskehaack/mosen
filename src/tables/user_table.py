@@ -55,8 +55,14 @@ def add_row(n_clicks, vals, ids, edit_barcode):
     if n_clicks is None:
         return no_update, no_update
     if n_clicks > 0:
+        if str(edit_barcode) in list(data["barcode"]):
+            row = data[data["barcode"] == str(edit_barcode)]
+            indecies = row.index
+            data.drop(indecies, inplace=True)
+
         new = pd.DataFrame([{c: vals[i] for i, c in enumerate(data.columns)}])
         data = pd.concat([data, new])
+
     upload_values(data, "users")
 
     if edit_barcode is not None and int(edit_barcode) > 999:
@@ -72,13 +78,14 @@ def add_row(n_clicks, vals, ids, edit_barcode):
 @callback(
     Output({"type": "user_input", "index": f"inp_barcode_user"}, "invalid"),
     Input({"type": "user_input", "index": f"inp_barcode_user"}, "value"),
+    State("edit_input", "value"),
     prevent_initial_callback=True,
 )
-def validate_barcode_user(value):
+def validate_barcode_user(value, edit_barcode):
     bars = [row["barcode"] for row in get_users().to_dict(orient="records")]
     bars.extend([row["barcode_user"] for row in get_trans().to_dict(orient="records")])
     if (
-        str(value) in set(bars)
+        (str(value) in set(bars) and str(value) != str(edit_barcode))
         or value is None
         or type(value) != int
         or len(str(value)) != 4

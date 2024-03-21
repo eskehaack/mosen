@@ -92,8 +92,14 @@ def add_row(n_clicks, stock_trigger, vals, ids, edit_barcode):
     if n_clicks is None:
         return no_update, no_update
     if n_clicks > 0:
+        if str(edit_barcode) in list(data["barcode"]):
+            row = data[data["barcode"] == str(edit_barcode)]
+            indecies = row.index
+            data.drop(indecies, inplace=True)
+
         new = pd.DataFrame([{c: vals[i] for i, c in enumerate(data.columns)}])
         data = pd.concat([data, new])
+
     upload_values(data, "prods")
 
     if edit_barcode is not None and int(edit_barcode) < 999:
@@ -109,12 +115,13 @@ def add_row(n_clicks, stock_trigger, vals, ids, edit_barcode):
 @callback(
     Output({"type": "prod_input", "index": f"inp_barcode_prod"}, "invalid"),
     Input({"type": "prod_input", "index": f"inp_barcode_prod"}, "value"),
+    State("edit_input", "value"),
     prevent_initial_callback=True,
 )
-def validate_barcode_prod(value):
+def validate_barcode_prod(value, edit_barcode):
     bars = [row["barcode"] for row in get_prods().to_dict(orient="records")]
     bars.extend([row["barcode_prod"] for row in get_trans().to_dict(orient="records")])
-    if (
+    if str(value) != str(edit_barcode) and (
         str(value) in set(bars)
         or value is None
         or type(value) != int
