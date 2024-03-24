@@ -553,6 +553,10 @@ def layout_func():
             ),
             dcc.Store(id="retain_focus_main", data=None),
             dcc.Store(id="retain_focus_prod", data=None),
+            dcc.Interval(
+                id="backup_interval", interval=10 * 60000, n_intervals=0  # one minute
+            ),
+            dcc.Store(id="backup_filename", data=None),
         ]
     )
 

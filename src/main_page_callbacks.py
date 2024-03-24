@@ -15,6 +15,8 @@ from src.barcode_generator import generate_pdf
 
 import base64
 import io
+import shutil
+from datetime import datetime
 
 
 def create_overview(plot_col, average=False):
@@ -354,3 +356,14 @@ def reset_database(trigger, delete, cancel):
         return False
     else:
         return no_update
+
+
+@callback(Output("backup_filename", "data"), Input("backup_interval", "n_intervals"))
+def backup_database(trigger):
+    if trigger is not None:
+        filename = (
+            f"beerbase_backup_{str(datetime.now().strftime('%d_%m_%Y_%H_%M_%S'))}.db"
+        )
+        shutil.copy("beerbase.db", filename)
+        return filename
+    return no_update
