@@ -10,7 +10,7 @@ from src.data_connection import (
     get_users,
     get_current_trans,
     update_current_trans,
-    upload_values,
+    add_transactions,
     reset_current_trans,
     get_show_bill,
     get_waste,
@@ -128,9 +128,6 @@ def get_transactions(trigger, barcode):
 )
 def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
     users = get_users()
-    prods = get_prods()
-    transactions = get_trans()
-    current = get_current_trans()
     barcode_open = get_barcode(barcode_open)
     barcode_close = get_barcode(barcode_close)
     user_barcodes = list(users["barcode"])
@@ -143,23 +140,24 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
             return True, no_update, "", False
         return no_update, "", no_update, False
     elif trigger == "prod_barcode" and int(barcode_close) == int(barcode_open):
-        for _, row in current.iterrows():
-            new_row = pd.DataFrame(
-                [
-                    {
-                        "barcode_user": barcode_open,
-                        "barcode_prod": row["barcode_prod"],
-                        "price": str(
-                            prods[prods["barcode"] == str(row["barcode_prod"])][
-                                "price"
-                            ].values[0]
-                        ),
-                        "timestamp": str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
-                    }
-                ]
-            )
-            transactions = pd.concat([transactions, new_row], ignore_index=True)
-        upload_values(transactions, "transactions")
+        prods = get_prods()
+        current = get_current_trans()
+        new_rows = pd.DataFrame(
+            [
+                {
+                    "barcode_user": barcode_open,
+                    "barcode_prod": row["barcode_prod"],
+                    "price": str(
+                        prods[prods["barcode"] == str(row["barcode_prod"])][
+                            "price"
+                        ].values[0]
+                    ),
+                    "timestamp": str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
+                }
+                for _, row in current.iterrows()
+            ]
+        )
+        add_transactions(new_rows)
         return False, "", no_update, False
     return no_update, no_update, no_update, False
 

@@ -143,6 +143,11 @@ def upload_values(data: list, table: str):
         return table, None
 
 
+def add_transactions(trans_df):
+    con, cur = init()
+    trans_df.to_sql(name="transactions", con=con, if_exists="append", index=False)
+
+
 def validate_user(row: dict, data: list):
     users = pd.DataFrame(data)
     bad = False
