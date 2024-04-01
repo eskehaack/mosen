@@ -190,7 +190,7 @@ def validate_trans(row: dict, data: list):
 def check_db(data, con, cur):
     if len(data) == 0:
         out = cur.execute("SELECT * FROM settings")
-        cur.execute("INSERT INTO settings VALUES ('OLProgram', 'True', '0')")
+        cur.execute("INSERT INTO settings VALUES ('OLProgram', 'True', '0', '10')")
         con.commit()
         print("updated database")
         return False
@@ -204,6 +204,14 @@ def get_password():
     if not check_db(data, con, cur):
         data = list(cur.execute("SELECT password FROM settings"))
     return data[0][0]
+
+
+def get_backup_time():
+    con, cur = init()
+    data = list(cur.execute("SELECT backup FROM settings"))
+    if not check_db(data, con, cur):
+        data = list(cur.execute("SELECT backup FROM settings"))
+    return int(data[0][0])
 
 
 def get_show_bill():
@@ -222,9 +230,14 @@ def get_waste():
     return int(data[0][0])
 
 
-def update_values(password=None, show_bill=None, waste=None):
+def update_values(password=None, show_bill=None, waste=None, backup_time=None):
     con, cur = init()
-    inps = {"password": password, "show_bill": show_bill, "waste": waste}
+    inps = {
+        "password": password,
+        "show_bill": show_bill,
+        "waste": waste,
+        "backup": backup_time,
+    }
     for key, value in inps.items():
         if value is None:
             continue

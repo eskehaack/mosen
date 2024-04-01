@@ -16,6 +16,7 @@ from src.barcode_generator import generate_pdf
 import base64
 import io
 import shutil
+import os
 from datetime import datetime
 
 
@@ -358,12 +359,24 @@ def reset_database(trigger, delete, cancel):
         return no_update
 
 
-@callback(Output("backup_filename", "data"), Input("backup_interval", "n_intervals"))
-def backup_database(trigger):
-    if trigger is not None:
-        filename = (
-            f"beerbase_backup_{str(datetime.now().strftime('%d_%m_%Y_%H_%M_%S'))}.db"
-        )
+@callback(
+    Output("backup_filename", "data"),
+    Input("backup_interval", "n_intervals"),
+    State("backup_interval", "interval"),
+)
+def backup_database(trigger, interval):
+    if trigger is not None and interval != 0:
+        if not os.path.isdir("swamp_backups"):
+            os.mkdir("swamp_backups")
+        filename = f"swamp_backups/beerbase_backup_{str(datetime.now().strftime('%d_%m_%Y_%H_%M_%S'))}.db"
         shutil.copy("beerbase.db", filename)
         return filename
+    return no_update
+
+
+@callback(Output("backup_interval", "interval"), Input("settings_backup_time", "value"))
+def set_backup_timer(interval):
+    if interval is not None:
+        update_values(backup_time=interval)
+        return interval * 60000  # Convert to minutes
     return no_update
