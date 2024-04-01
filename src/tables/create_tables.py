@@ -35,7 +35,8 @@ def table_defs():
             CREATE TABLE settings (
                 password varchar(255),
                 show_bill varchar(255),
-                waste varchar(255)
+                waste varchar(255),
+                backup varchar(255)
             )
         """,
     }

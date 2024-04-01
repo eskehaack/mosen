@@ -33,6 +33,7 @@ from src.data_connection import (
     get_password,
     get_show_bill,
     get_waste,
+    get_backup_time,
 )
 from src.tables.user_table import init
 from app import app
@@ -322,6 +323,29 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
+                                    dbc.Col(html.P("Backup Timer"), width=4),
+                                    dbc.Col(
+                                        dbc.Input(
+                                            value=get_backup_time(),
+                                            id="settings_backup_time",
+                                            type="number",
+                                            minLength=0,
+                                        ),
+                                        width=4,
+                                    ),
+                                    dbc.Tooltip(
+                                        children="Timer for making backups of the database. Timer is set in minutes. Backups are stored in dedicated 'backups' folder. Setting this to 0, means the program will not create backups, and you will be on your own when the app inevitabily fails you",
+                                        target="settings_backup_time",
+                                    ),
+                                ],
+                                align="center",
+                            ),
+                            width=12,
+                        ),
+                        html.Hr(),
+                        dbc.Col(
+                            dbc.Row(
+                                [
                                     dbc.Col(html.P("Password: "), width=4),
                                     dbc.Col(
                                         dbc.Input(
@@ -554,7 +578,9 @@ def layout_func():
             dcc.Store(id="retain_focus_main", data=None),
             dcc.Store(id="retain_focus_prod", data=None),
             dcc.Interval(
-                id="backup_interval", interval=10 * 60000, n_intervals=0  # one minute
+                id="backup_interval",
+                interval=get_backup_time(),
+                n_intervals=0,  # default ten minutes
             ),
             dcc.Store(id="backup_filename", data=None),
         ]
