@@ -500,10 +500,6 @@ def layout_func():
                                         dbc.Button(
                                             html.Img(
                                                 src="assets/sliders.svg",
-                                                # style={
-                                                #     "height": "50px",
-                                                #     "width": "50px",
-                                                # },
                                             ),
                                             id="open_settings",
                                         ),
