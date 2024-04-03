@@ -498,7 +498,9 @@ def layout_func():
                                     dbc.Col(html.H1(app.title), width=11),
                                     dbc.Col(
                                         dbc.Button(
-                                            html.I(className="bi bi-sliders"),
+                                            html.Img(
+                                                src="assets/sliders.svg",
+                                            ),
                                             id="open_settings",
                                         ),
                                         width=1,

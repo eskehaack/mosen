@@ -251,7 +251,7 @@ def show_balance(trigger, user_id):
             except:
                 return no_update
             user_balance = sum(
-                map(int, trans[trans["barcode_user"] == str(user_id)]["price"])
+                map(float, trans[trans["barcode_user"] == str(user_id)]["price"])
             )
             return f"{user} - Current bill is approximately: {max(0, round(user_balance + user_waste))}"
     return no_update
