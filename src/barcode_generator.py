@@ -1,7 +1,7 @@
 import os
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from barcode.upc import UniversalProductCodeA
+from barcode import Code128
 from barcode.writer import ImageWriter
 
 from src.data_connection import get_users, get_prods
@@ -70,7 +70,7 @@ def generate_pdf(type, pdf_filename="output.pdf", number_of_guest_codes=0):
                 return f"{x} - {y}"
             for letters in y.split(" ")[1:][-3:]:
                 initials = ".".join(letters[0].upper())
-                if len(y.split(' ')[0]) < 12: 
+                if len(y.split(" ")[0]) < 12:
                     name = f"{y.split(' ')[0][:11]} {initials}."
                 else:
                     name = f"{y.split(' ')[0][:11]}. {initials}."
@@ -94,7 +94,7 @@ def generate_pdf(type, pdf_filename="output.pdf", number_of_guest_codes=0):
     page_count = 0
     total_barcodes = width_nr * height_nr
     for i, number in enumerate(numbers):
-        barcode = UniversalProductCodeA(number.zfill(11), writer=ImageWriter())
+        barcode = Code128(number, writer=ImageWriter())
         barcode_count = i % total_barcodes
 
         # Move to the next page
@@ -118,8 +118,8 @@ def generate_pdf(type, pdf_filename="output.pdf", number_of_guest_codes=0):
         c.drawCentredString(
             x=x_text_displacement(x),
             y=y_text_displacement(y),
-            text=text_func(number, names[i])
-            )
+            text=text_func(number, names[i]),
+        )
     c.save()
 
 

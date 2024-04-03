@@ -9,7 +9,7 @@ def get_revenue():
         lambda x: price_dict[str(x)] if str(x) in list(price_dict.keys()) else 0
     )
     try:
-        return sum(map(int, list(trans["price"])))
+        return sum(map(float, list(trans["price"])))
     except:
         return 0
 
@@ -17,7 +17,7 @@ def get_revenue():
 def get_total_income():
     prods = get_prods().to_dict(orient="records")
     try:
-        return sum([int(row["initial_stock"]) * int(row["price"]) for row in prods])
+        return sum([float(row["initial_stock"]) * float(row["price"]) for row in prods])
     except:
         return 0
 
@@ -25,7 +25,7 @@ def get_total_income():
 def get_current_return():
     prods = get_prods().to_dict(orient="records")
     try:
-        return sum([int(row["current_stock"]) * int(row["price"]) for row in prods])
+        return sum([float(row["current_stock"]) * float(row["price"]) for row in prods])
     except:
         return 0
 
@@ -40,7 +40,9 @@ def get_income():
     )
     user_income = list()
     if len(trans) > 0:
-        price = lambda x: sum(map(int, trans[trans["barcode_user"] == str(x)]["price"]))
+        price = lambda x: sum(
+            map(float, trans[trans["barcode_user"] == str(x)]["price"])
+        )
         n_prods = lambda x: len(trans[trans["barcode_user"] == str(x)])
     else:
         price = lambda x: 0
