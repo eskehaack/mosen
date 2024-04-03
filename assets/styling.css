@@ -58,3 +58,8 @@ h1 {
     margin-bottom: 10px;
     padding: 2px;
 }
+
+hr {
+    color: white;
+    border-top: 2px solid gray;
+}
