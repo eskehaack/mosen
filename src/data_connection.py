@@ -54,7 +54,6 @@ def get_trans():
     cols = [
         "barcode_user",
         "barcode_prod",
-        "price",
         "timestamp",
     ]
     data = pd.DataFrame(
@@ -114,7 +113,7 @@ def upload_values(data: list, table: str):
     if type(data) == pd.DataFrame:
         data = data.to_dict(orient="records")
     con, cur = init()
-    n_cols = {"prods": 6, "transactions": 4, "users": 4}
+    n_cols = {"prods": 6, "transactions": 3, "users": 4}
     validation = {
         "prods": validate_prod,
         "transactions": validate_trans,

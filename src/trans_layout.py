@@ -147,11 +147,6 @@ def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
                 {
                     "barcode_user": barcode_open,
                     "barcode_prod": row["barcode_prod"],
-                    "price": str(
-                        prods[prods["barcode"] == str(row["barcode_prod"])][
-                            "price"
-                        ].values[0]
-                    ),
                     "timestamp": str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
                 }
                 for _, row in current.iterrows()
