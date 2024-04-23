@@ -17,17 +17,20 @@ def init():
     prevent_initial_call=True,
 )
 def open_user_modal(new_user, confirm, cancel, data):
+    trigger = ctx.triggered_id
+    if trigger is None:
+        return no_update, no_update
+
     try:
         barcode = int(max(pd.DataFrame(data)["barcode"])) + 1
     except KeyError:
-        barcode = 1001
-    trigger = ctx.triggered_id
+        barcode = 1000
     if trigger == "new_user_btn":
         return True, barcode
     elif trigger == "confirm_user":
-        return False, barcode
+        return False, no_update
     else:
-        return False, barcode
+        return False, no_update
 
 
 @callback(
@@ -85,10 +88,10 @@ def validate_barcode_user(value, edit_barcode):
     bars = [row["barcode"] for row in get_users().to_dict(orient="records")]
     bars.extend([row["barcode_user"] for row in get_trans().to_dict(orient="records")])
     if (
-        (str(value) in set(bars) and str(value) != str(edit_barcode))
-        or value is None
-        or type(value) != int
-        or len(str(value)) != 4
+        value is None
+        or not str(value).isdigit()
+        or len(str(value)) < 4
+        or (str(value) in set(bars) and str(value) != str(edit_barcode))
     ):
         return True
     return False

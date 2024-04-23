@@ -73,7 +73,7 @@ def create_overview(plot_col, average=False):
                         0
                         if (
                             number := int(
-                                prods[prods["category"] == ranks[i][:-1]][
+                                prods[prods["category"] == ranks[i][:-9]][
                                     "initial_stock"
                                 ].values[0]
                             )
@@ -90,7 +90,14 @@ def create_overview(plot_col, average=False):
                 {
                     rank: (
                         0
-                        if (number := len(users[users[str(plot_col)] == ranks[i][:-1]]))
+                        if (
+                            number := len(
+                                users[
+                                    users[str(plot_col)]
+                                    == ranks[i][: -(len(plot_col) + 1)]
+                                ]
+                            )
+                        )
                         == 0
                         else int(count) / number
                     )
@@ -98,7 +105,6 @@ def create_overview(plot_col, average=False):
                 }
                 for i, overview in enumerate(overview_df)
             ]
-
     y = [
         prods[prods["barcode"] == str(p)]["name"].values[0]
         for p in transactions["barcode_prod"]
@@ -323,7 +329,7 @@ def edit_new_data_modals(delete, edit, table, barcode):
         return no_update, no_update, [no_update] * 4, [no_update] * 6
     elif trigger == "edit_modal_edit" and barcode is not None:
         if table == "users":
-            data = get_prods()
+            data = get_users()
             row = data[data["barcode"] == str(barcode)]
             if len(row) == 0:
                 return no_update, no_update, [no_update] * 4, [no_update] * 6
