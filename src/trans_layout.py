@@ -129,7 +129,11 @@ def get_transactions(trigger, barcode):
 def open_trans_modal(trigger_open, trigger_close, barcode_open, barcode_close):
     users = get_users()
     barcode_open = get_barcode(barcode_open)
+    if barcode_open == "bad barcode":
+        return no_update, "", no_update, no_update
     barcode_close = get_barcode(barcode_close)
+    if barcode_close == "bad barcode":
+        return no_update, no_update, "", no_update
     user_barcodes = list(users["barcode"])
     trigger = ctx.triggered_id
     if trigger == "new_trans_inp":
@@ -169,6 +173,8 @@ def new_trans(trigger, barcode, user_barcode):
     prods = get_prods()
     current = get_current_trans()
     barcode = get_barcode(barcode)
+    if barcode == "bad barcode":
+        return no_update, ""
     user_barcode = get_barcode(user_barcode)
     if barcode == user_barcode:
         return (

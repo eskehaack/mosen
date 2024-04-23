@@ -47,4 +47,7 @@ def get_table(id, data, height):
 def get_barcode(barcode):
     if barcode is None or barcode == "":
         return barcode
+    if not str(barcode).isdigit():
+        print(f"Warning: Could not convert barcode {barcode} to integer value.")
+        return "bad barcode"
     return str(int(barcode))
