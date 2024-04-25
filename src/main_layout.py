@@ -22,6 +22,7 @@ from src.modals import (
     bad_rows_mdl,
     edit_modal,
     reset_modal,
+    study_users_modal,
 )
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
@@ -207,6 +208,11 @@ def transaction_settings_layout():
                                             "type": "download_trigger",
                                         }
                                     ),
+                                    html.Hr(),
+                                    dbc.Button(
+                                        "Study Users",
+                                        id="study_users_btn",
+                                    ),
                                 ]
                             ),
                             width=3,
@@ -231,6 +237,7 @@ def transaction_settings_layout():
             ),
             dcc.Store(id="placeholder_for_empty_output"),
             export_payments_modal(),
+            study_users_modal(),
             dcc.Download(id="payments_download"),
             dcc.Store(id={"index": "transactions", "type": "bad_rows"}),
         ],

@@ -386,3 +386,35 @@ def set_backup_timer(interval):
         update_values(backup_time=interval)
         return interval * 60000  # Convert to minutes
     return no_update
+
+
+@callback(Output("study_users_modal", "is_open"), Input("study_users_btn", "n_clicks"))
+def open_study_users(trigger):
+    if trigger is not None:
+        return True
+    return no_update
+
+
+@callback(Output("study_user_table", "figure"), Input("study_users_dd", "value"))
+def study_users(users):
+    if users is None or len(users) < 1:
+        return no_update
+
+    prods = get_prods()
+    trans = get_trans().merge(
+        prods, "right", left_on="barcode_prod", right_on="barcode"
+    )
+
+    if not isinstance(users, list):
+        users = [users]
+
+    study_table = list()
+    for user in users:
+        prod_dict = {prod: 0 for prod in list(prods["name"])}
+        prod_dict["user"] = user
+        user_trans = trans[trans["barcode_user"] == str(user)]
+        counts = user_trans["name"].value_counts().to_dict()
+        prod_dict.update(counts)
+        study_table.append(prod_dict)
+
+    return px.bar(study_table, text="user")
