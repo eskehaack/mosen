@@ -22,6 +22,7 @@ from src.modals import (
     bad_rows_mdl,
     edit_modal,
     reset_modal,
+    study_users_modal,
 )
 from src.trans_layout import trans_modal
 from src.main_page_callbacks import create_overview
@@ -167,6 +168,9 @@ def product_settings_layout():
 
 
 def transaction_settings_layout():
+    waste = get_waste()
+    num_users = len(get_users())
+    user_waste = 0 if num_users == 0 else int(waste / num_users)
     layout = dbc.Container(
         [
             html.Div(
@@ -181,7 +185,9 @@ def transaction_settings_layout():
                                     html.Hr(),
                                     html.P(f"Current Revenue: {get_revenue()}"),
                                     html.Hr(),
-                                    html.P(f"Current Waste: {get_waste()}"),
+                                    html.P(
+                                        f"Current Waste: {waste} ({user_waste} pr. user)"
+                                    ),
                                     html.Hr(),
                                     html.P(f"Current Return: {get_current_return()}"),
                                     html.Hr(),
@@ -201,6 +207,11 @@ def transaction_settings_layout():
                                             "index": "transactions",
                                             "type": "download_trigger",
                                         }
+                                    ),
+                                    html.Hr(),
+                                    dbc.Button(
+                                        "Study Users",
+                                        id="study_users_btn",
                                     ),
                                 ]
                             ),
@@ -226,6 +237,7 @@ def transaction_settings_layout():
             ),
             dcc.Store(id="placeholder_for_empty_output"),
             export_payments_modal(),
+            study_users_modal(),
             dcc.Download(id="payments_download"),
             dcc.Store(id={"index": "transactions", "type": "bad_rows"}),
         ],

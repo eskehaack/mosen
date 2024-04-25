@@ -86,32 +86,17 @@ def trans_modal():
     State("new_trans_inp", "value"),
 )
 def get_transactions(trigger, barcode):
-    transactions = get_trans()
     users = get_users()
     prods = get_prods()
     barcode = get_barcode(barcode)
+    transactions = get_trans().merge(
+        prods, "right", left_on="barcode_prod", right_on="barcode"
+    )
     user_barcodes = list(map(str, users["barcode"]))
     if not (trigger is not None and str(barcode) in user_barcodes):
         return no_update, no_update
     user_trans = transactions[transactions["barcode_user"] == str(barcode)]
-    trans_data = [
-        {
-            p: sum(
-                [
-                    (
-                        1
-                        if p
-                        == prods[prods["barcode"] == str(row["barcode_prod"])][
-                            "name"
-                        ].values[0]
-                        else 0
-                    )
-                    for i, row in user_trans.iterrows()
-                ]
-            )
-            for p in list(prods["name"])
-        }
-    ]
+    trans_data = [user_trans["name"].value_counts().to_dict()]
     return px.bar(trans_data)
 
 

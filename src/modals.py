@@ -2,6 +2,7 @@ from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 import pandas as pd
 from src.data_connection import get_prods, get_trans, get_users
+from src.components import get_table
 
 USER_COLS = ["rank", "team"]
 
@@ -351,6 +352,36 @@ def reset_modal():
         ],
         id="reset_data_modal",
         size="md",
+        is_open=False,
+    )
+    return mdl
+
+
+def study_users_modal():
+    available_users = list(get_users()["barcode"])
+    mdl = dbc.Modal(
+        [
+            dbc.ModalHeader("Take a closer look at what users bought."),
+            dbc.ModalBody(
+                [
+                    dbc.Row(
+                        dcc.Dropdown(
+                            id="study_users_dd",
+                            options=available_users,
+                            multi=True,
+                            style={"color": "black"},
+                        ),
+                    ),
+                    html.Hr(),
+                    dbc.Row(
+                        dcc.Graph(id="study_user_table"),
+                        className="show_box",
+                    ),
+                ]
+            ),
+        ],
+        id="study_users_modal",
+        size="lg",
         is_open=False,
     )
     return mdl
