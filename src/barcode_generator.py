@@ -30,7 +30,7 @@ def get_codes_prods():
 
 
 def get_codes_mult():
-    numbers = ["00", "02", "03", "04", "05", "10", "25", "24", "30", "60"]
+    numbers = ["00", "02", "03", "04", "06", "10", "12", "24", "30", "60"]
     names = numbers.copy()
     names[0] = "Cancel Product"
     return numbers, names
