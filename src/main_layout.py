@@ -167,6 +167,9 @@ def product_settings_layout():
 
 
 def transaction_settings_layout():
+    waste = get_waste()
+    num_users = len(get_users())
+    user_waste = 0 if num_users == 0 else int(waste / num_users)
     layout = dbc.Container(
         [
             html.Div(
@@ -181,7 +184,9 @@ def transaction_settings_layout():
                                     html.Hr(),
                                     html.P(f"Current Revenue: {get_revenue()}"),
                                     html.Hr(),
-                                    html.P(f"Current Waste: {get_waste()}"),
+                                    html.P(
+                                        f"Current Waste: {waste} ({user_waste} pr. user)"
+                                    ),
                                     html.Hr(),
                                     html.P(f"Current Return: {get_current_return()}"),
                                     html.Hr(),
