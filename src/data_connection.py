@@ -166,6 +166,20 @@ def validate_user(row: dict, data: list):
 def validate_prod(row: dict, data: list):
     prods = pd.DataFrame(data)
     bad = False
+    actual_colums = [
+        "barcode",
+        "name",
+        "price",
+        "category",
+        "current_stock",
+        "initial_stock",
+    ]
+    if set(prods.columns) != set(actual_colums):
+        bad = True
+        print(
+            f"It seems that there is a mismatch in the column names of your file. Make sure that the columns are: \n{actual_colums}"
+        )
+        return row, bad
     if sum(array(prods["barcode"]) == row["barcode"]) > 1:
         bad = True
         row["barcode"] = max(prods["barcode"]) + 1
