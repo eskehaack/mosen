@@ -25,7 +25,7 @@ from src.modals import (
     study_users_modal,
 )
 from src.trans_layout import trans_modal
-from src.main_page_callbacks import create_overview
+from src.main_page_callbacks import create_overview,create_top_user_overview
 from src.components import get_upload, get_table
 from src.data_connection import (
     get_prods,
@@ -499,20 +499,9 @@ def settings_mode_func():
 def top_user_chart():
     return dbc.Modal(
         [
-            dbc.ModalHeader(html.H1("Settings")),
+            dbc.ModalHeader(html.H1("Secret user stuffs")),
             html.Div(
-                        [
-                            dbc.Col(
-                                children=dcc.Graph(
-                                    figure=create_overview(
-                                        graph_col := "team", average=False
-                                    ),
-                                    id="overview_graph2",
-                                    config={"displayModeBar": False},
-                                ),
-                            ),
-                            html.Br(),
-                        ],
+                        id="top_user_chart_content",
                         className="show_box",
                     ),
         ],
@@ -682,6 +671,18 @@ def open_report(trigger):
         return True
     return no_update
 
+@callback(
+    Output("top_user_chart_content", "children"),
+    Input("top_user_chart_modal", "is_open"),
+)
+def update_chart(is_open):
+    if not is_open:
+        return no_update
+    fig = create_top_user_overview(plot_col="team")
+    fig.update_layout(
+        legend_itemclick=False
+    )
+    return dcc.Graph(figure=fig, config={"displayModeBar": False}, id="top_user_chart")
 
 @callback(
     Output("user_settings", "children"),

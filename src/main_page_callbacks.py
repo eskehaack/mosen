@@ -4,6 +4,7 @@ import plotly.express as px
 from src.data_connection import (
     get_prods,
     get_trans,
+    get_user_products,
     get_users,
     upload_values,
     update_values,
@@ -111,6 +112,16 @@ def create_overview(plot_col, average=False):
     ]
     return px.bar(overview_df, x=ranks, y=y)
 
+def create_top_user_overview(plot_col):
+    overview_df = get_user_products()
+    #ensure every user product combination is listed
+    overview_df = (
+        overview_df
+        .pivot_table(index="user", columns="product", values="amount", fill_value=0)
+        .reset_index()
+        .melt(id_vars="user", var_name="product", value_name="amount")
+    )
+    return px.bar(overview_df,x="user",y="amount",color="product")
 
 @callback(
     Output("overview_graph", "figure"),
