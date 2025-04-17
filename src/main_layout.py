@@ -496,6 +496,30 @@ def settings_mode_func():
         is_open=False,
     )
 
+def top_user_chart():
+    return dbc.Modal(
+        [
+            dbc.ModalHeader(html.H1("Settings")),
+            html.Div(
+                        [
+                            dbc.Col(
+                                children=dcc.Graph(
+                                    figure=create_overview(
+                                        graph_col := "team", average=False
+                                    ),
+                                    id="overview_graph2",
+                                    config={"displayModeBar": False},
+                                ),
+                            ),
+                            html.Br(),
+                        ],
+                        className="show_box",
+                    ),
+        ],
+        id="top_user_chart_modal",
+        fullscreen=True,
+        is_open=False,
+    )
 
 def layout_func():
     layout = dbc.Container(
@@ -592,6 +616,7 @@ def layout_func():
             trans_modal(),
             password_modal(),
             edit_modal(),
+            top_user_chart(),
             dcc.Store(id="update_settings"),
             dbc.Alert(
                 "There are no users, ya dumb dumb!",
@@ -633,7 +658,6 @@ def open_password(trigger_open, trigger_close, trigger_enter, password):
             return False
     return no_update
 
-
 @callback(
     Output("settings_modal", "is_open"),
     Output("password_input", "value"),
@@ -648,6 +672,15 @@ def open_settings(trigger, trigger_enter, password):
         if password == get_password():
             return True, ""
     return False, no_update
+
+@callback(
+    Output("top_user_chart_modal", "is_open"),
+    Input("open_top_user_chart", "n_clicks"),
+)
+def open_report(trigger):
+    if trigger:
+        return True
+    return no_update
 
 
 @callback(
