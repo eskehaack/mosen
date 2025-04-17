@@ -507,15 +507,29 @@ def layout_func():
                             dbc.Row(html.Br()),
                             dbc.Row(
                                 [
-                                    dbc.Col(html.H1(app.title), width=11),
+                                    dbc.Col(html.H1(app.title), width=10),
                                     dbc.Col(
                                         dbc.Button(
                                             html.Img(
                                                 src="assets/sliders.svg",
+                                                style={"height": "24px", "width": "24px"},
                                             ),
                                             id="open_settings",
                                         ),
                                         width=1,
+                                    ),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            html.Img(
+                                                src="assets/easterEgg.svg",
+                                                style={"height": "24px", "width": "24px"},
+                                            ),
+                                            id="open_top_user_chart",
+                                            
+                                        ),
+                                        width=1,
+                                        style={'display': 'inline-block'},
+                                        
                                     ),
                                 ],
                             ),
