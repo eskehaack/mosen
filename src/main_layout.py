@@ -550,10 +550,8 @@ def layout_func():
                                                 options=[
                                                     {"label": "Teams", "value": "team"},
                                                     {"label": "Ranks", "value": "rank"},
-                                                    {
-                                                        "label": "Products",
-                                                        "value": "products",
-                                                    },
+                                                    {"label": "Products", "value": "products",},
+                                                    {"label": "Users", "value": "name",},
                                                 ],
                                                 value=graph_col,
                                                 id="graph_selection",
