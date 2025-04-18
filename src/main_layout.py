@@ -497,13 +497,26 @@ def settings_mode_func():
     )
 
 def top_user_chart():
+    product_names = get_prods()["name"].to_list()
     return dbc.Modal(
         [
             dbc.ModalHeader(html.H1("Secret user stuffs")),
-            html.Div(
-                        id="top_user_chart_content",
-                        className="show_box",
-                    ),
+            dbc.ModalBody([
+                html.Div(   
+                            children=[dcc.Graph(figure=create_top_user_overview(product_names), config={"displayModeBar": False}, id="top_user_chart")],
+                            id="top_user_chart_content",
+                            className="show_box",
+                        ),
+                html.Br(),
+                html.Div([
+                    html.Div([dcc.Checklist(
+                        id='trace-selector',
+                        options=[{'label': product, 'value': product} for product in product_names],
+                        value=[product for product in product_names], 
+                        inline=True
+                    )]),
+                ])
+            ]),
         ],
         id="top_user_chart_modal",
         fullscreen=True,
@@ -672,17 +685,17 @@ def open_report(trigger):
     return no_update
 
 @callback(
-    Output("top_user_chart_content", "children"),
+    Output("top_user_chart", "figure"),
     Input("top_user_chart_modal", "is_open"),
+    Input("trace-selector", "value"),
 )
-def update_chart(is_open):
-    if not is_open:
+def update_top_user_chart(is_open,selected_traces):
+    if not is_open: 
         return no_update
-    fig = create_top_user_overview(plot_col="team")
-    fig.update_layout(
-        legend_itemclick=False
-    )
-    return dcc.Graph(figure=fig, config={"displayModeBar": False}, id="top_user_chart")
+    print(2)
+    fig = create_top_user_overview(selected_traces)
+    fig.update_layout(legend_itemclick=False)
+    return fig
 
 @callback(
     Output("user_settings", "children"),

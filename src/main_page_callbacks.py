@@ -112,16 +112,18 @@ def create_overview(plot_col, average=False):
     ]
     return px.bar(overview_df, x=ranks, y=y)
 
-def create_top_user_overview(plot_col):
-    overview_df = get_user_products()
+def create_top_user_overview(selected_products):
+    all_user_products = get_user_products()
+    filtered_user_products = all_user_products[all_user_products['product'].isin(selected_products)]
     #ensure every user product combination is listed
-    overview_df = (
-        overview_df
+    filtered_user_products = (
+        filtered_user_products
         .pivot_table(index="user", columns="product", values="amount", fill_value=0)
         .reset_index()
         .melt(id_vars="user", var_name="product", value_name="amount")
     )
-    return px.bar(overview_df,x="user",y="amount",color="product")
+    print(1)
+    return px.bar(filtered_user_products,x="user",y="amount",color="product")
 
 @callback(
     Output("overview_graph", "figure"),
