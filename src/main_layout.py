@@ -393,7 +393,7 @@ def settings_settings_layout():
                                                 id="export_barcodes_btn",
                                                 className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=4,
+                                            width=3,
                                         ),
                                         dbc.Col(
                                             dbc.Button(
@@ -402,7 +402,7 @@ def settings_settings_layout():
                                                 color="danger",
                                                 className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=4,
+                                            width=3,
                                         ),
                                         dbc.Col(
                                             dbc.Button(
@@ -410,7 +410,15 @@ def settings_settings_layout():
                                                 id="close_app_btn",
                                                 className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=4,
+                                            width=3,
+                                        ),
+                                        dbc.Col(
+                                            dbc.Button(
+                                                "Toggle top user chart",
+                                                id="toggle_top_user_chart",
+                                                className="d-grid gap-2 col-10 mx-auto",
+                                            ),
+                                            width=3,
                                         ),
                                     ],
                                     align="center",
@@ -554,6 +562,7 @@ def layout_func():
                                             
                                         ),
                                         width=1,
+                                        id="open_top_user_chart_wrapper",
                                         style={'display': 'inline-block'},
                                         
                                     ),
@@ -698,6 +707,18 @@ def update_top_user_chart(is_open,selected_traces):
         legend_itemdoubleclick=False
     )
     return fig
+
+@callback(
+    Output("open_top_user_chart_wrapper", "style"),
+    Input("toggle_top_user_chart", "n_clicks"),
+    State("open_top_user_chart_wrapper", "style"),
+    prevent_initial_call=True
+)
+def toggle_visibility(n, current_style):
+    if current_style and current_style.get("display") == "none":
+        return {"display": "inline-block"}
+    else:
+        return {"display": "none"}
 
 @callback(
     Output("user_settings", "children"),
