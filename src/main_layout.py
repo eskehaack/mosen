@@ -692,9 +692,11 @@ def open_report(trigger):
 def update_top_user_chart(is_open,selected_traces):
     if not is_open: 
         return no_update
-    print(2)
     fig = create_top_user_overview(selected_traces)
-    fig.update_layout(legend_itemclick=False)
+    fig.update_layout(
+        legend_itemclick=False,
+        legend_itemdoubleclick=False
+    )
     return fig
 
 @callback(
