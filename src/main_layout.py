@@ -505,24 +505,40 @@ def settings_mode_func():
     )
 
 def top_user_chart():
-    product_names = get_prods()["name"].to_list()
+    sorted_product_names = (
+        get_prods()
+        .sort_values(by=["category", "name"])["name"]
+        .to_list()
+    )
     return dbc.Modal(
         [
             dbc.ModalHeader(html.H1("Secret user stuffs")),
             dbc.ModalBody([
                 html.Div(   
-                            children=[dcc.Graph(figure=create_top_user_overview(product_names), config={"displayModeBar": False}, id="top_user_chart")],
+                            children=[dcc.Graph(
+                                figure=create_top_user_overview(sorted_product_names), 
+                                config={"displayModeBar": False}, 
+                                id="top_user_chart"
+                            )],
                             id="top_user_chart_content",
                             className="show_box",
                         ),
                 html.Br(),
                 html.Div([
-                    html.Div([dcc.Checklist(
-                        id='trace-selector',
-                        options=[{'label': product, 'value': product} for product in product_names],
-                        value=[product for product in product_names], 
-                        inline=True
-                    )]),
+                    html.Div(
+                        children=[
+                            dbc.Button("Select/Deselect All", id="toggle-all-button", n_clicks=0),
+                            dbc.Checklist(
+                                id='trace-selector',
+                                options=[{'label': product, 'value': product} for product in sorted_product_names],
+                                value=sorted_product_names, 
+                                inline=True,
+                                className="mb-3"
+                            ),  
+                        ],
+                        className="d-flex justify-content-center",
+                        style={"gap": "20px"}
+                    ),
                 ])
             ]),
         ],
@@ -719,6 +735,20 @@ def toggle_visibility(n, current_style):
         return {"display": "inline-block"}
     else:
         return {"display": "none"}
+
+@app.callback(
+    Output('trace-selector', 'value'),
+    Input('toggle-all-button', 'n_clicks'),
+    State('trace-selector', 'value'),
+)
+def toggle_checkboxes(n_clicks, current_values):
+    if not n_clicks:
+        return no_update
+    product_names = get_prods()["name"]
+    if set(current_values) == set(product_names):
+        return []
+    return product_names.to_list()
+
 
 @callback(
     Output("user_settings", "children"),
