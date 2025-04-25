@@ -1,5 +1,5 @@
 import threading
-from src.data_connection import get_query
+from src.data_connection import get_query,get_prods
 import plotly.express as px
 
 class TopUserChartData:
@@ -39,6 +39,11 @@ class TopUserChartData:
             .melt(id_vars="user", var_name="product", value_name="amount")
         )
         self.all_user_products = all_user_products
+        self.all_products = (
+            get_prods()
+            .sort_values(by=["category", "name"])["name"]
+            .to_list()
+        )
 
 
     def get_chart(self, selected_products:list):

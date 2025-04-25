@@ -505,19 +505,15 @@ def settings_mode_func():
         is_open=False,
     )
 
-def top_user_chart():
-    sorted_product_names = (
-        get_prods()
-        .sort_values(by=["category", "name"])["name"]
-        .to_list()
-    )
+def top_user_chart_modal():
+    data = TopUserChartData()
     return dbc.Modal(
         [
-            dbc.ModalHeader(html.H1("Secret user stuffs")),
+            dbc.ModalHeader(html.H1("Top Buyers")),
             dbc.ModalBody([
                 html.Div(   
                             children=[dcc.Graph(
-                                figure=TopUserChartData().get_chart(sorted_product_names), 
+                                figure=data.get_chart(data.all_products), 
                                 config={"displayModeBar": False}, 
                                 id="top_user_chart"
                             )],
@@ -528,11 +524,11 @@ def top_user_chart():
                 html.Div([
                     html.Div(
                         children=[
-                            dbc.Button("Select/Deselect All", id="toggle-all-button", n_clicks=0),
+                            dbc.Button("Select/Deselect All", id="toggle_all_products_button", n_clicks=0),
                             dbc.Checklist(
-                                id='trace-selector',
-                                options=[{'label': product, 'value': product} for product in sorted_product_names],
-                                value=sorted_product_names, 
+                                id='products_selector',
+                                options=[{'label': product, 'value': product} for product in data.all_products],
+                                value=data.all_products, 
                                 inline=True,
                                 className="mb-3"
                             ),  
@@ -644,7 +640,7 @@ def layout_func():
             trans_modal(),
             password_modal(),
             edit_modal(),
-            top_user_chart(),
+            top_user_chart_modal(),
             dcc.Store(id="update_settings"),
             dbc.Alert(
                 "There are no users, ya dumb dumb!",
@@ -703,24 +699,20 @@ def open_settings(trigger, trigger_enter, password):
 
 @callback(
     Output("top_user_chart_modal", "is_open"),
-    Output('trace-selector', 'options'),
+    Output('products_selector', 'options'),
     Input("open_top_user_chart", "n_clicks"),
 )
 def open_report(trigger):
     if trigger:
-        TopUserChartData().refresh()
-        sorted_product_names = (
-            get_prods()
-            .sort_values(by=["category", "name"])["name"]
-            .to_list()
-        )
-        return True,sorted_product_names
+        data = TopUserChartData()
+        data.refresh()
+        return True, data.all_products
     return no_update, no_update
 
 @callback(
     Output("top_user_chart", "figure"),
     Input("top_user_chart_modal", "is_open"),
-    Input("trace-selector", "value"),
+    Input("products_selector", "value"),
 )
 def update_top_user_chart(is_open,selected_traces):
     if not is_open: 
@@ -746,17 +738,17 @@ def toggle_visibility(n, current_style):
         return {"display": "none"}
 
 @app.callback(
-    Output('trace-selector', 'value'),
-    Input('toggle-all-button', 'n_clicks'),
-    State('trace-selector', 'value'),
+    Output('products_selector', 'value'),
+    Input('toggle_all_products_button', 'n_clicks'),
+    State('products_selector', 'value'),
 )
 def toggle_checkboxes(n_clicks, current_values):
     if not n_clicks:
         return no_update
-    product_names = get_prods()["name"]
+    product_names = TopUserChartData().all_products
     if set(current_values) == set(product_names):
         return []
-    return product_names.to_list()
+    return product_names
 
 
 @callback(
