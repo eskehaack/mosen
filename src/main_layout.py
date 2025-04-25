@@ -745,7 +745,8 @@ def toggle_checkboxes(n_clicks, current_values):
     if not n_clicks:
         return no_update
     product_names = TopUserChartData().all_products
-    if set(current_values) == set(product_names):
+    
+    if set(product_names).issubset(current_values):
         return []
     return product_names
 
