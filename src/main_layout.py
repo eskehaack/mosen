@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import os
+from src.TopUserChartData import TopUserChartData
 from src.tables.prod_table import get_waste_table
 from src.tables.trans_table import (
     get_revenue,
@@ -25,7 +26,7 @@ from src.modals import (
     study_users_modal,
 )
 from src.trans_layout import trans_modal
-from src.main_page_callbacks import create_overview,create_top_user_overview
+from src.main_page_callbacks import create_overview
 from src.components import get_upload, get_table
 from src.data_connection import (
     get_prods,
@@ -516,7 +517,7 @@ def top_user_chart():
             dbc.ModalBody([
                 html.Div(   
                             children=[dcc.Graph(
-                                figure=create_top_user_overview(sorted_product_names), 
+                                figure=TopUserChartData().get_chart(sorted_product_names), 
                                 config={"displayModeBar": False}, 
                                 id="top_user_chart"
                             )],
@@ -707,6 +708,7 @@ def open_settings(trigger, trigger_enter, password):
 )
 def open_report(trigger):
     if trigger:
+        TopUserChartData().refresh()
         sorted_product_names = (
             get_prods()
             .sort_values(by=["category", "name"])["name"]
@@ -723,7 +725,7 @@ def open_report(trigger):
 def update_top_user_chart(is_open,selected_traces):
     if not is_open: 
         return no_update
-    fig = create_top_user_overview(selected_traces)
+    fig = TopUserChartData().get_chart(selected_traces)
     fig.update_layout(
         legend_itemclick=False,
         legend_itemdoubleclick=False,

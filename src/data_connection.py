@@ -76,27 +76,12 @@ def get_users():
         data.columns = cols
     return data
 
-def get_user_products():
-    con, cur = init()
-    dtypes = {
-        "user": "string",
-        "product": "string",
-        "amount": "int64"
-    }
-    cols = [col for col,_ in dtypes.items()]
-    query = """
-        SELECT users.name AS user,prods.name AS product, COUNT(*) AS amount
-        FROM users 
-            INNER JOIN transactions  ON transactions.barcode_user = users.barcode
-            INNER JOIN prods ON transactions.barcode_prod = prods.barcode
-        GROUP BY users.name,prods.name
-    """
-    data = pd.DataFrame(cur.execute(query),columns=cols)
+def get_query(query:str,columns:list) -> pd.DataFrame:
+    _, cur = init()
+    data = pd.DataFrame(cur.execute(query),columns=columns)
     if len(data) == 0:
-        data = pd.DataFrame(columns=cols)
-    data = data.astype(dtypes)
+        data = pd.DataFrame(columns=columns)
     return data
-
 
 def get_current_trans():
     con, cur = init()
