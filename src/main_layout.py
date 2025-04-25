@@ -702,12 +702,18 @@ def open_settings(trigger, trigger_enter, password):
 
 @callback(
     Output("top_user_chart_modal", "is_open"),
+    Output('trace-selector', 'options'),
     Input("open_top_user_chart", "n_clicks"),
 )
 def open_report(trigger):
     if trigger:
-        return True
-    return no_update
+        sorted_product_names = (
+            get_prods()
+            .sort_values(by=["category", "name"])["name"]
+            .to_list()
+        )
+        return True,sorted_product_names
+    return no_update, no_update
 
 @callback(
     Output("top_user_chart", "figure"),
@@ -720,7 +726,8 @@ def update_top_user_chart(is_open,selected_traces):
     fig = create_top_user_overview(selected_traces)
     fig.update_layout(
         legend_itemclick=False,
-        legend_itemdoubleclick=False
+        legend_itemdoubleclick=False,
+        xaxis={'categoryorder': 'total descending'}
     )
     return fig
 
