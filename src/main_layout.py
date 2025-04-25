@@ -558,16 +558,6 @@ def layout_func():
                                     dbc.Col(
                                         dbc.Button(
                                             html.Img(
-                                                src="assets/sliders.svg",
-                                                style={"height": "24px", "width": "24px"},
-                                            ),
-                                            id="open_settings",
-                                        ),
-                                        width=1,
-                                    ),
-                                    dbc.Col(
-                                        dbc.Button(
-                                            html.Img(
                                                 src="assets/easterEgg.svg",
                                                 style={"height": "24px", "width": "24px"},
                                             ),
@@ -576,8 +566,18 @@ def layout_func():
                                         ),
                                         width=1,
                                         id="open_top_user_chart_wrapper",
-                                        style={'display': 'inline-block'},
+                                        style={'visibility': 'hidden'},
                                         
+                                    ),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            html.Img(
+                                                src="assets/sliders.svg",
+                                                style={"height": "24px", "width": "24px"},
+                                            ),
+                                            id="open_settings",
+                                        ),
+                                        width=1,
                                     ),
                                 ],
                             ),
@@ -613,7 +613,6 @@ def layout_func():
                                                     {"label": "Teams", "value": "team"},
                                                     {"label": "Ranks", "value": "rank"},
                                                     {"label": "Products", "value": "products",},
-                                                    {"label": "Users", "value": "name",},
                                                 ],
                                                 value=graph_col,
                                                 id="graph_selection",
@@ -732,10 +731,10 @@ def update_top_user_chart(is_open,selected_traces):
     prevent_initial_call=True
 )
 def toggle_visibility(n, current_style):
-    if current_style and current_style.get("display") == "none":
-        return {"display": "inline-block"}
+    if current_style and current_style.get("visibility") == "hidden":
+        return {"visibility": "visible"}
     else:
-        return {"display": "none"}
+        return {"visibility": "hidden"}
 
 @app.callback(
     Output('products_selector', 'value'),

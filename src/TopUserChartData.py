@@ -18,7 +18,7 @@ class TopUserChartData:
                 cls._instance._initialized = False
         return cls._instance
 
-    def __init__(self,x_top=2):
+    def __init__(self,x_top=10):
         if self._initialized:
             return
         self.all_user_products = None
