@@ -6,7 +6,7 @@ class TopUserChartData:
     """Class to cache db callsand generate top user charts
     
     (This adds state to a stateless framework, but it works since there is only 1 client)"""
-    # region Singleton pattern logic
+    # region Singleton pattern
     _instance = None
     _lock = threading.Lock()
     
@@ -29,24 +29,15 @@ class TopUserChartData:
 
     # region bussiness logic
     def refresh(self):
-        """query and cache user products"""
-        all_user_products = self.__class__.query_user_products()
-        #ensure every user product combination is listed:
-        all_user_products = (
-            all_user_products
-            .pivot_table(index="user", columns="product", values="amount", fill_value=0)
-            .reset_index()
-            .melt(id_vars="user", var_name="product", value_name="amount")
-        )
-        self.all_user_products = all_user_products
+        """query and cache all needed data"""
+        self.all_user_products = self.get_verbose_user_products()
         self.all_products = (
             get_prods()
             .sort_values(by=["category", "name"])["name"]
             .to_list()
         )
 
-
-    def get_chart(self, selected_products:list):
+    def get_chart(self, selected_products:list)-> px.bar:
         """returns a barchart with the top buyers of selected_products based last refresh"""
         selected_user_products = self.all_user_products[self.all_user_products['product'].isin(selected_products)]
         user_totals = (
@@ -62,6 +53,17 @@ class TopUserChartData:
         )
         selected_user_products = selected_user_products[selected_user_products['user'].isin(top_x_users)]
         return px.bar(selected_user_products,x="user",y="amount",color="product")
+    
+    def get_verbose_user_products(self):
+        """get user products with all possible combinations listed (ie. all rows with amount = 0 are included)"""
+        all_user_products = self.__class__.query_user_products()
+        all_user_products = (
+            all_user_products
+            .pivot_table(index="user", columns="product", values="amount", fill_value=0)
+            .reset_index()
+            .melt(id_vars="user", var_name="product", value_name="amount")
+        )
+        return all_user_products
     # endregion
 
     # region DB Query Configuration
