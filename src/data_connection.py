@@ -30,9 +30,14 @@ def init():
         con.commit()
     return con, cur
 
+def get_query(query:str,columns:list) -> pd.DataFrame:
+    """run query and return df with columns as strings"""
+    _, cur = init()
+    data = pd.DataFrame(cur.execute(query),columns=columns, dtype=str)
+    return data
 
 def get_prods():
-    con, cur = init()
+    query = "SELECT * FROM prods"
     cols = [
         "barcode",
         "name",
@@ -41,51 +46,29 @@ def get_prods():
         "current_stock",
         "initial_stock",
     ]
-    data = pd.DataFrame(cur.execute("SELECT * FROM prods"), columns=cols, dtype=str)
-    if len(data) == 0:
-        data = pd.DataFrame(columns=cols, dtype=str)
-    else:
-        data.columns = cols
-    return data
+    return get_query(query,cols)
 
 
 def get_trans():
-    con, cur = init()
+    query = "SELECT * FROM transactions"
     cols = [
         "barcode_user",
         "barcode_prod",
         "timestamp",
     ]
-    data = pd.DataFrame(
-        cur.execute("SELECT * FROM transactions"), columns=cols, dtype=str
-    )
-    if len(data) == 0:
-        data = pd.DataFrame(columns=cols, dtype=str)
-    else:
-        data.columns = cols
-    return data
+    return get_query(query,cols)
 
 
 def get_users():
-    con, cur = init()
+    query = "SELECT * FROM users"
     cols = ["barcode", "name", "rank", "team"]
-    data = pd.DataFrame(cur.execute("SELECT * FROM users"), columns=cols, dtype=str)
-    if len(data) == 0:
-        data = pd.DataFrame(columns=cols, dtype=str)
-    else:
-        data.columns = cols
-    return data
+    return get_query(query,cols)
 
 
 def get_current_trans():
-    con, cur = init()
+    query = "SELECT * FROM temporary"
     cols = ["barcode_prod", "name"]
-    data = pd.DataFrame(cur.execute("SELECT * FROM temporary"), columns=cols, dtype=str)
-    if len(data) == 0:
-        data = pd.DataFrame(columns=cols, dtype=str)
-    else:
-        data.columns = cols
-    return data
+    return get_query(query,cols)
 
 
 def update_current_trans(data: pd.DataFrame):

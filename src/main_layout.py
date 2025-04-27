@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import os
+from src.TopUserChartData import TopUserChartData
 from src.tables.prod_table import get_waste_table
 from src.tables.trans_table import (
     get_revenue,
@@ -393,7 +394,7 @@ def settings_settings_layout():
                                                 id="export_barcodes_btn",
                                                 className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=4,
+                                            width=3,
                                         ),
                                         dbc.Col(
                                             dbc.Button(
@@ -402,7 +403,7 @@ def settings_settings_layout():
                                                 color="danger",
                                                 className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=4,
+                                            width=3,
                                         ),
                                         dbc.Col(
                                             dbc.Button(
@@ -410,7 +411,15 @@ def settings_settings_layout():
                                                 id="close_app_btn",
                                                 className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=4,
+                                            width=3,
+                                        ),
+                                        dbc.Col(
+                                            dbc.Button(
+                                                "Toggle top user chart",
+                                                id="toggle_top_user_chart",
+                                                className="d-grid gap-2 col-10 mx-auto",
+                                            ),
+                                            width=3,
                                         ),
                                     ],
                                     align="center",
@@ -496,6 +505,44 @@ def settings_mode_func():
         is_open=False,
     )
 
+def top_user_chart_modal():
+    data = TopUserChartData()
+    return dbc.Modal(
+        [
+            dbc.ModalHeader(html.H1("Top Buyers")),
+            dbc.ModalBody([
+                html.Div(   
+                            children=[dcc.Graph(
+                                figure=data.get_chart(data.all_products), 
+                                config={"displayModeBar": False}, 
+                                id="top_user_chart"
+                            )],
+                            id="top_user_chart_content",
+                            className="show_box",
+                        ),
+                html.Br(),
+                html.Div([
+                    html.Div(
+                        children=[
+                            dbc.Button("Select/Deselect All", id="toggle_all_products_button", n_clicks=0),
+                            dbc.Checklist(
+                                id='products_selector',
+                                options=[{'label': product, 'value': product} for product in data.all_products],
+                                value=data.all_products, 
+                                inline=True,
+                                className="mb-3"
+                            ),  
+                        ],
+                        className="d-flex justify-content-center",
+                        style={"gap": "20px"}
+                    ),
+                ])
+            ]),
+        ],
+        id="top_user_chart_modal",
+        fullscreen=True,
+        is_open=False,
+    )
 
 def layout_func():
     layout = dbc.Container(
@@ -507,11 +554,26 @@ def layout_func():
                             dbc.Row(html.Br()),
                             dbc.Row(
                                 [
-                                    dbc.Col(html.H1(app.title), width=11),
+                                    dbc.Col(html.H1(app.title), width=10),
+                                    dbc.Col(
+                                        dbc.Button(
+                                            html.Img(
+                                                src="assets/easterEgg.svg",
+                                                style={"height": "24px", "width": "24px"},
+                                            ),
+                                            id="open_top_user_chart",
+                                            
+                                        ),
+                                        width=1,
+                                        id="open_top_user_chart_wrapper",
+                                        style={'visibility': 'hidden'},
+                                        
+                                    ),
                                     dbc.Col(
                                         dbc.Button(
                                             html.Img(
                                                 src="assets/sliders.svg",
+                                                style={"height": "24px", "width": "24px"},
                                             ),
                                             id="open_settings",
                                         ),
@@ -550,10 +612,7 @@ def layout_func():
                                                 options=[
                                                     {"label": "Teams", "value": "team"},
                                                     {"label": "Ranks", "value": "rank"},
-                                                    {
-                                                        "label": "Products",
-                                                        "value": "products",
-                                                    },
+                                                    {"label": "Products", "value": "products",},
                                                 ],
                                                 value=graph_col,
                                                 id="graph_selection",
@@ -580,6 +639,7 @@ def layout_func():
             trans_modal(),
             password_modal(),
             edit_modal(),
+            top_user_chart_modal(),
             dcc.Store(id="update_settings"),
             dbc.Alert(
                 "There are no users, ya dumb dumb!",
@@ -621,7 +681,6 @@ def open_password(trigger_open, trigger_close, trigger_enter, password):
             return False
     return no_update
 
-
 @callback(
     Output("settings_modal", "is_open"),
     Output("password_input", "value"),
@@ -636,6 +695,60 @@ def open_settings(trigger, trigger_enter, password):
         if password == get_password():
             return True, ""
     return False, no_update
+
+@callback(
+    Output("top_user_chart_modal", "is_open"),
+    Output('products_selector', 'options'),
+    Input("open_top_user_chart", "n_clicks"),
+)
+def open_report(trigger):
+    if trigger:
+        data = TopUserChartData()
+        data.refresh()
+        return True, data.all_products
+    return no_update, no_update
+
+@callback(
+    Output("top_user_chart", "figure"),
+    Input("top_user_chart_modal", "is_open"),
+    Input("products_selector", "value"),
+)
+def update_top_user_chart(is_open,selected_traces):
+    if not is_open: 
+        return no_update
+    fig = TopUserChartData().get_chart(selected_traces)
+    fig.update_layout(
+        legend_itemclick=False,
+        legend_itemdoubleclick=False,
+        xaxis={'categoryorder': 'total descending'}
+    )
+    return fig
+
+@callback(
+    Output("open_top_user_chart_wrapper", "style"),
+    Input("toggle_top_user_chart", "n_clicks"),
+    State("open_top_user_chart_wrapper", "style"),
+    prevent_initial_call=True
+)
+def toggle_visibility(n, current_style):
+    if current_style and current_style.get("visibility") == "hidden":
+        return {"visibility": "visible"}
+    else:
+        return {"visibility": "hidden"}
+
+@app.callback(
+    Output('products_selector', 'value'),
+    Input('toggle_all_products_button', 'n_clicks'),
+    State('products_selector', 'value'),
+)
+def toggle_checkboxes(n_clicks, current_values):
+    if not n_clicks:
+        return no_update
+    product_names = TopUserChartData().all_products
+    
+    if set(product_names).issubset(current_values):
+        return []
+    return product_names
 
 
 @callback(

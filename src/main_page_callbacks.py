@@ -111,7 +111,6 @@ def create_overview(plot_col, average=False):
     ]
     return px.bar(overview_df, x=ranks, y=y)
 
-
 @callback(
     Output("overview_graph", "figure"),
     Input("new_trans_modal", "is_open"),
