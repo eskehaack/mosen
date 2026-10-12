@@ -1,6 +1,10 @@
 import pytest
 import pandas as pd
+import sqlite3
+from contextlib import closing
+from unittest.mock import Mock
 
+from src.database import data_connection
 from src.container import Container
 from src.database.tables.product import ProductTable
 from src.database.data_connection import (
@@ -611,3 +615,154 @@ class TestCreateTables:
 
         # Assert - users table recreated
         assert db._connection.table_exists("users") is True
+
+    def test_init_closes_every_connection_it_opens(self, tmp_path, monkeypatch):
+        # Arrange
+        connections = []
+        original_connect = sqlite3.connect
+
+        def track_connection(*args, **kwargs):
+            con = original_connect(*args, **kwargs)
+            connections.append(con)
+            return con
+
+        monkeypatch.setattr(sqlite3, "connect", track_connection)
+
+        # Act
+        db = Database(str(tmp_path / "init.db"))
+        db.init()
+
+        # Assert
+        for con in connections:
+            with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                con.execute("SELECT 1")
+
+    def test_failed_table_creation_keeps_sql_error_and_undoes_prior_creates(self, test_db, monkeypatch):
+        # Arrange: make creation necessary for two tables, with a failure in the second.
+        with closing(sqlite3.connect(test_db.data_file)) as con:
+            con.execute("DROP TABLE users")
+            con.execute("DROP TABLE transactions")
+        monkeypatch.setattr(test_db._transaction_table, "create_sql", "INVALID CREATE SQL")
+
+        # Act
+        with pytest.raises(sqlite3.OperationalError, match="syntax error"):
+            test_db._create_tables()
+
+        # Assert: the first CREATE is rolled back and the owned connection is closed.
+        assert test_db._connection._active_con is None
+        assert test_db._connection.table_exists("users") is False
+        assert test_db._connection.table_exists("transactions") is False
+
+    def test_init_does_not_commit_or_close_its_callers_transaction(self, test_db):
+        # Arrange
+        password = get_password()
+
+        def initialize_then_fail():
+            update_values(password="changed")
+            test_db.init()
+            raise RuntimeError("failure after init")
+
+        # Act
+        result = test_db.execute_in_transaction(initialize_then_fail)
+
+        # Assert
+        with pytest.raises(RuntimeError, match="failure after init"):
+            result.raise_if_error()
+        assert get_password() == password
+        with closing(sqlite3.connect(test_db.data_file)) as con:
+            assert con.execute("SELECT password FROM settings").fetchone() == (password,)
+
+
+def _table_rows(db):
+    return {name: table.get().to_dict(orient="records") for name, table in db.tables.items()}
+
+
+@pytest.fixture
+def populated_reset_db(test_db):
+    test_db.upload_values_raises(
+        [{"barcode": 1000, "name": "Alice", "rank": "Member", "team": "A",
+          "paid_cents": 5000}], "users"
+    )
+    test_db.upload_values_raises(
+        [{"barcode": 101, "name": "Beer", "price": 10, "category": "Drinks",
+          "current_stock": 8, "initial_stock": 10}], "prods"
+    )
+    test_db.upload_values_raises(
+        [{"barcode_user": 1000, "barcode_prod": 101,
+          "timestamp": "12/10/2026 10:00:00"}], "transactions"
+    )
+    test_db.upload_values_raises([{"barcode_prod": 101, "name": "Beer"}], "temporary")
+    update_values(password="changed", show_bill=False, waste=25, backup_time=42)
+    return test_db
+
+
+def test_reset_clears_configured_database_and_restores_default_settings(
+    populated_reset_db, tmp_path, monkeypatch
+):
+    # Arrange
+    db = populated_reset_db
+    data_file = db.data_file
+    expected = {name: [] for name in db.tables}
+    expected["settings"] = [db._settings_table.default_row]
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(data_connection.k, "unhook_all", Mock())
+    monkeypatch.setattr(data_connection.k, "send", Mock())
+
+    # Act
+    data_connection.reset_all_tables()
+
+    # Assert
+    assert Container.get(Database) is db
+    assert not (tmp_path / "beerbase.db").exists()
+    assert _table_rows(db) == expected
+    with closing(sqlite3.connect(data_file)) as con:
+        con.row_factory = sqlite3.Row
+        saved_rows = {
+            name: [dict(row) for row in con.execute(f"SELECT * FROM {name}")]
+            for name in db.tables
+        }
+        assert saved_rows == expected
+    assert _table_rows(Database(data_file)) == expected
+
+
+@pytest.mark.parametrize(
+    "failure_stage, error_message",
+    [("drop", "not authorized"), ("create", "syntax error"), ("defaults", "defaults write failed")],
+)
+def test_failed_reset_restores_database_and_cache_without_exiting(
+    populated_reset_db, failure_stage, error_message, monkeypatch
+):
+    # Arrange
+    db = populated_reset_db
+    before = _table_rows(db)
+    exit_calls = []
+    monkeypatch.setattr(data_connection.k, "unhook_all", lambda: exit_calls.append("unhook"))
+    monkeypatch.setattr(data_connection.k, "send", exit_calls.append)
+    if failure_stage == "drop":
+        original_connect = db._connection.connect
+
+        def deny_transaction_drop(action, table, *_args):
+            if action == sqlite3.SQLITE_DROP_TABLE and table == "transactions":
+                return sqlite3.SQLITE_DENY
+            return sqlite3.SQLITE_OK
+
+        def connect_with_drop_failure():
+            con, cur = original_connect()
+            con.set_authorizer(deny_transaction_drop)
+            return con, cur
+
+        monkeypatch.setattr(db._connection, "connect", connect_with_drop_failure)
+    elif failure_stage == "create":
+        monkeypatch.setattr(db._transaction_table, "create_sql", "INVALID CREATE SQL")
+    else:
+        monkeypatch.setattr(db._settings_table, "set", Mock(side_effect=RuntimeError("defaults write failed")))
+
+    # Act
+    with pytest.raises((sqlite3.DatabaseError, RuntimeError), match=error_message):
+        data_connection.reset_all_tables()
+
+    # Assert: both stored rows and caches survive, and the kiosk stays open.
+    assert exit_calls == []
+    assert db._connection._active_con is None
+    assert _table_rows(db) == before
+    assert _table_rows(Database(db.data_file)) == before

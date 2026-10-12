@@ -6,6 +6,7 @@ import io
 import sqlite3
 import types
 import zipfile
+from unittest.mock import Mock
 
 import pytest
 import pandas as pd
@@ -135,6 +136,59 @@ def _load_barcode_export_data(temp_db, users):
         ],
         "prods",
     )
+
+
+@pytest.fixture
+def reset_all_tables(monkeypatch):
+    reset = Mock()
+    monkeypatch.setattr(main_page_callbacks, "reset_all_tables", reset)
+    return reset
+
+
+@pytest.mark.parametrize(
+    "trigger, expected",
+    [
+        pytest.param("reset_app", True, id="open"),
+        pytest.param("cancel_delete_data_btn", False, id="cancel"),
+        pytest.param(None, no_update, id="initial-render"),
+    ],
+)
+def test_reset_dialog_never_resets_data_without_confirmation(
+    monkeypatch, reset_all_tables, trigger, expected
+):
+    monkeypatch.setattr(main_page_callbacks, "ctx", types.SimpleNamespace(triggered_id=trigger))
+
+    result = main_page_callbacks.reset_database(1, 1, 1, [])
+
+    assert result == (expected, no_update)
+    reset_all_tables.assert_not_called()
+
+
+def test_confirming_reset_resets_tables_and_closes_dialog(
+    monkeypatch, reset_all_tables
+):
+    monkeypatch.setattr(main_page_callbacks, "ctx", types.SimpleNamespace(triggered_id="delete_data_btn"))
+
+    result = main_page_callbacks.reset_database(1, 1, None, [])
+
+    assert result == (False, no_update)
+    reset_all_tables.assert_called_once_with()
+
+
+def test_reset_failure_preserves_dialog_and_appends_original_error(
+    monkeypatch, reset_all_tables
+):
+    reset_all_tables.side_effect = RuntimeError("reset failed")
+    monkeypatch.setattr(main_page_callbacks, "ctx", types.SimpleNamespace(triggered_id="delete_data_btn"))
+    previous_error = {"msg": "earlier error"}
+
+    is_open, errors = main_page_callbacks.reset_database(1, 1, None, [previous_error])
+
+    assert is_open is no_update
+    assert errors[0] == previous_error
+    assert len(errors) == 2
+    assert errors[-1]["src"] == "reset_database"
+    assert errors[-1]["msg"] == "reset failed"
 
 
 def test_income_lookup_empty_query_returns_all_rows_without_mutating_source():

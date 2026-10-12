@@ -1,7 +1,8 @@
 import pytest
 import sqlite3
+from contextlib import closing
 from src.container import Container
-from src.database.data_connection import Database, db_transaction_raises, db_transaction_result
+from src.database.data_connection import Database, TransactionResult, db_transaction_raises, db_transaction_result
 from src.error_handler import Result
 
 @pytest.fixture
@@ -180,3 +181,35 @@ def test_append_multiple_rows_commit_on_success(test_db):
     con.close()
     assert count == 2
     assert len(db._product_table.get()) == 2
+
+
+@pytest.mark.parametrize(
+    "error, values",
+    [(RuntimeError("inner failure"), ()), (None, ("cancelled",))],
+    ids=["exception", "commit-false"],
+)
+def test_nested_rollback_preserves_outcome_and_owner_restores_users_and_cache(test_db, error, values):
+    test_db.upload_values_raises(
+        [{"barcode": 1000, "name": "Alice", "rank": "Member", "team": "A"}], "users"
+    )
+    before = test_db.users
+
+    def inner():
+        if error is not None:
+            raise error
+        return TransactionResult(values=values, commit=False)
+
+    def outer():
+        test_db.upload_values_raises([], "users")
+        _, cur = test_db._connection.connect()
+        cur.execute("DROP TABLE users")
+        result = test_db.execute_in_transaction(inner)
+        return TransactionResult(values=result.to_values(), commit=False)
+
+    result = test_db.execute_in_transaction(outer)
+
+    assert result.error is error
+    assert result.values == values
+    assert test_db.users.equals(before)
+    with closing(sqlite3.connect(test_db.data_file)) as con:
+        assert con.execute("SELECT barcode FROM users").fetchall() == [(1000,)]

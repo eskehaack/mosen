@@ -63,20 +63,24 @@ class Database:
         self.init()
     
     def init(self):
-        """Initialize connection and create all tables."""
-        con, cur = self._connection.connect()
-        self._create_tables()
-        self._settings_table.ensure_defaults()
-        return con, cur
+        """Initialize tables and defaults without leaking or closing borrowed connections."""
+        def initialize():
+            self._create_tables()
+            self.refresh_caches()
+            self._settings_table.ensure_defaults()
+
+        self.execute_in_transaction(initialize).raise_if_error()
     
     def _create_tables(self):
         """Create all required tables if they don't exist."""
-        con, cur = self._connection.connect()
-        for table_name, table in self.tables.items():
-            if not self._table_exists(table_name):
-                cur.execute(table.create_sql)
-                con.commit()
-        con.close()
+        def create_tables():
+            _, cur = self._connection.connect()
+            for table_name, table in self.tables.items():
+                if not self._table_exists(table_name):
+                    cur.execute(table.create_sql)
+
+        #leaves caches untouched; on failure some tables may still be missing.
+        self.execute_in_transaction(create_tables, refresh_on_rollback=False).raise_if_error()
     
     def _table_exists(self, table_name: str) -> bool:
         with self._connection._lock:
@@ -180,10 +184,11 @@ class Database:
                     changed.append(name)
         return changed
 
-    def execute_in_transaction(self, function) -> Result:
+    def execute_in_transaction(self, function, *, refresh_on_rollback: bool = True) -> Result:
         """Run callable `function` inside a single DB transaction/connection under the DB lock.
         Respects TransactionResult.commit if returned by 'function'. Otherwise commits on success, rolls back on exception
-        refreshes all table caches on rollbacks.
+        Only the transaction owner refreshes caches after rollback, unless disabled for schema creation,
+        which leaves caches untouched and may involve tables that do not yet exist.
         """
         with self._connection._lock:
             token = None
@@ -193,7 +198,7 @@ class Database:
                 transaction_result = TransactionResult.from_return(result)
 
                 self._connection.end_transaction(token, commit=transaction_result.commit)
-                if not transaction_result.commit:
+                if token is not None and refresh_on_rollback and not transaction_result.commit:
                     self.refresh_caches()
                 return transaction_result.to_result()
                     
@@ -201,7 +206,8 @@ class Database:
                 try:
                     self._connection.end_transaction(token, commit=False)
                 finally:
-                    self.refresh_caches()
+                    if token is not None and refresh_on_rollback:
+                        self.refresh_caches()
                 return Result.from_exception(e)
 
 
@@ -367,11 +373,17 @@ def update_values(
     if not success:
          raise ValueError(f"Failed to update settings. Bad rows: {bad_rows}")
 
+@db_transaction_raises
+def _reset_all_tables():
+    """Recreate the configured database's tables and defaults in one transaction."""
+    db = Container.get(Database)
+    _, cur = db._connection.connect()
+    for table in db.tables:
+        cur.execute(f"DROP TABLE IF EXISTS {table}")
+    db.init()
+
+
 def reset_all_tables():
-    con, cur = Container.get(Database).init()
-    for table in ["users", "prods", "transactions", "temporary", "settings"]:
-        cur.execute(f"DROP TABLE {table} IF EXISTS")
-        con.commit()
-    Container.set(Database, Database())
+    _reset_all_tables()
     k.unhook_all()
     k.send("alt+f4")

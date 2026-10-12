@@ -27,7 +27,7 @@ class Connection:
         return con, con.cursor()
 
     def begin_transaction(self):
-        """Return a new UUID token for the caller if it started the transaction otherwise return None.
+        """Begin a SQL transaction and return its owner token, or None for nested calls.
         Only the owner token (the first caller's UUID) will have effect when passed to
         `end_transaction()`; other tokens are ignored by `end_transaction()`.
         """
@@ -36,6 +36,11 @@ class Connection:
             if self._active_con is not None:
                 return None
             con = sqlite3.connect(self.data_file, timeout=5, check_same_thread=False)
+            try:
+                con.execute("BEGIN")
+            except Exception:
+                con.close()
+                raise
             self._active_con = con
             self._active_token = token
             return token

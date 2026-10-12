@@ -1,4 +1,5 @@
 import sqlite3
+from contextlib import closing
 from src.database.connection import Connection
 
 
@@ -42,3 +43,24 @@ def test_maybe_close_ignores_active_connection(tmp_path):
     assert cur.fetchone()[0] == 2
 
     conn.end_transaction(owner, commit=True)
+
+
+def test_owner_rollback_undoes_drop_and_create_after_nested_commit(tmp_path):
+    dbfile = tmp_path / "schema.db"
+    with closing(sqlite3.connect(dbfile)) as con:
+        con.execute("CREATE TABLE original(x INTEGER)")
+        con.execute("INSERT INTO original VALUES (1)")
+        con.commit()
+    conn = Connection(dbfile)
+
+    owner = conn.begin_transaction()
+    _, cur = conn.connect()
+    # No inserts or updates here: table changes alone must be transactional.
+    cur.execute("DROP TABLE original")
+    cur.execute("CREATE TABLE replacement(y INTEGER)")
+    conn.end_transaction(conn.begin_transaction(), commit=True)
+    conn.end_transaction(owner, commit=False)
+
+    with closing(sqlite3.connect(dbfile)) as con:
+        assert con.execute("SELECT x FROM original").fetchall() == [(1,)]
+        assert con.execute("SELECT name FROM sqlite_master WHERE name='replacement'").fetchone() is None
