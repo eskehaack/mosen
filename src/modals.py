@@ -260,50 +260,17 @@ def export_payments_modal():
                         "Export payments after the final stock update. Exporting recalculates and saves waste using the selected allocation strategy."
                     ),
                     html.Hr(),
-                    dbc.Col(
+                    dbc.Row(
                         [
-                            dbc.Row(
-                                [
-                                    dbc.Col(html.P("Add income: "), width=8),
-                                    dbc.Col(
-                                        dbc.Input(
-                                            id="added_amount_inp",
-                                            value=0,
-                                            min=0,
-                                            type="number",
-                                        ),
-                                        width=4,
-                                    ),
-                                ]
-                            ),
-                            html.Hr(),
-                            dbc.Row(
-                                [
-                                    dbc.Col(html.P("Round"), width=2),
-                                    dbc.Col(
-                                        dcc.Dropdown(
-                                            ["Up", "Down", "Nearest"],
-                                            value="Up",
-                                            clearable=False,
-                                            multi=False,
-                                            id="up_down_dd",
-                                            className="payment-dropdown",
-                                        ),
-                                        width=3,
-                                    ),
-                                    dbc.Col(html.P("to nearest: "), width=3),
-                                    dbc.Col(
-                                        dcc.Dropdown(
-                                            [0, 1, 2, 5, 10],
-                                            value=0,
-                                            clearable=False,
-                                            multi=False,
-                                            id="round_dd",
-                                            className="payment-dropdown",
-                                        ),
-                                        width=4,
-                                    ),
-                                ]
+                            dbc.Col(html.P("Add income: "), width=8),
+                            dbc.Col(
+                                dbc.Input(
+                                    id="added_amount_inp",
+                                    value=0,
+                                    min=0,
+                                    type="number",
+                                ),
+                                width=4,
                             ),
                         ]
                     ),

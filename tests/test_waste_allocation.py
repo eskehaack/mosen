@@ -751,7 +751,7 @@ def test_payment_export_added_income_ignores_settled_users(test_db, monkeypatch)
 
     # Act
     result = main_page_callbacks.control_payments_modal(
-        None, 1, 10, "Up", 0, []
+        None, 1, 10, []
     )
 
     # Assert
@@ -761,7 +761,50 @@ def test_payment_export_added_income_ignores_settled_users(test_db, monkeypatch)
     assert income.loc[1001, "price"] == 12
 
 
-def test_payment_export_uses_excel_file(test_db, monkeypatch):
+def test_payment_export_shares_added_income_only_between_buyers_with_amounts_due(
+    test_db, monkeypatch
+):
+    # Arrange: two eligible buyers (including a guest), a non-buyer and a settled buyer.
+    add_users(
+        [
+            {"barcode": 1000, "name": "A", "rank": "R", "team": "T"},
+            {"barcode": 1001, "name": "B", "rank": "R", "team": "T", "is_guest": 1},
+            {"barcode": 1002, "name": "C", "rank": "R", "team": "T"},
+            {"barcode": 1003, "name": "D", "rank": "R", "team": "T", "paid_cents": 250},
+        ]
+    )
+    upload_values(
+        pd.DataFrame(
+            [{
+                "barcode": 123, "name": "Beer", "price": 2.5,
+                "category": "Beverage", "current_stock": 0, "initial_stock": 4,
+            }]
+        ),
+        "prods",
+    )
+    add_sales([1000, 1001, 1003])
+    update_values(
+        waste_strategy="equal_all",
+        last_stock_update_at="2026-01-01 10:01:00",
+    )
+    monkeypatch.setattr(
+        main_page_callbacks, "ctx", types.SimpleNamespace(triggered_id="confirm_payments")
+    )
+
+    # Act
+    result = main_page_callbacks.control_payments_modal(None, 1, 0.5, [])
+
+    # Assert: waste still rounds up separately; only the two eligible buyers share 0.50.
+    income = read_downloaded_excel(result[1]).set_index("barcode")
+    assert result[0] is False
+    assert result[2] is main_page_callbacks.no_update
+    assert income["waste"].to_dict() == {1000: 1, 1001: 1, 1002: 1, 1003: 0}
+    assert income["price"].to_dict() == {1000: 3.75, 1001: 3.75, 1002: 1, 1003: 0}
+    assert test_db._user_table.get()["waste_cents"].tolist() == [100, 100, 100, 0]
+
+
+@pytest.mark.parametrize("price", [20, 12.5])
+def test_payment_export_uses_excel_file_without_rounding(test_db, monkeypatch, price):
     # Arrange
     add_users(
         [{"barcode": 1000, "name": "A", "rank": "R", "team": "T", "is_guest": 0}]
@@ -772,7 +815,7 @@ def test_payment_export_uses_excel_file(test_db, monkeypatch):
                 {
                     "barcode": 123,
                     "name": "Beer",
-                    "price": 20,
+                    "price": price,
                     "category": "Beverage",
                     "current_stock": 0,
                     "initial_stock": 1,
@@ -794,7 +837,7 @@ def test_payment_export_uses_excel_file(test_db, monkeypatch):
 
     # Act
     result = main_page_callbacks.control_payments_modal(
-        None, 1, 0, "Up", 0, []
+        None, 1, 0, []
     )
 
     # Assert
@@ -802,8 +845,9 @@ def test_payment_export_uses_excel_file(test_db, monkeypatch):
     assert download["filename"] == "swamp_machine_payments.xlsx"
     assert download["base64"] is True
     income = read_downloaded_excel(download).set_index("barcode")
-    assert income.loc[1000, "purchases"] == 20
-    assert income.loc[1000, "price"] == 20
+    assert income.loc[1000, "purchases"] == price
+    assert income.loc[1000, "price"] == price
+    assert result[2] is main_page_callbacks.no_update
 
 
 
@@ -1068,7 +1112,7 @@ def test_payment_export_persists_fresh_allocations(test_db, monkeypatch):
     )
 
     result = main_page_callbacks.control_payments_modal(
-        None, 1, 0, "Up", 0, []
+        None, 1, 0, []
     )
 
     assert result[0] is False
@@ -1089,7 +1133,7 @@ def test_payment_export_requires_stock_update(test_db, monkeypatch):
     )
 
     result = main_page_callbacks.control_payments_modal(
-        None, 1, 0, "Up", 0, []
+        None, 1, 0, []
     )
 
     assert result[1] is main_page_callbacks.no_update
@@ -1113,7 +1157,7 @@ def test_payment_export_requires_stock_after_latest_purchase(test_db, monkeypatc
     )
 
     result = main_page_callbacks.control_payments_modal(
-        None, 1, 0, "Up", 0, []
+        None, 1, 0, []
     )
 
     assert result[1] is main_page_callbacks.no_update
@@ -1149,7 +1193,7 @@ def test_payment_export_warns_but_creates_file_for_unparseable_timestamps(
     )
 
     result = main_page_callbacks.control_payments_modal(
-        None, 1, 0, "Up", 0, []
+        None, 1, 0, []
     )
 
     assert result[0] is False

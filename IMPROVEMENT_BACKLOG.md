@@ -33,7 +33,7 @@ Code locations below use file paths and function names. Function names are the p
 | 01 | ~~Fix Reset data~~ | Small | **Done** |
 | 02 | ~~Require unique product names~~ | Small | **Done** |
 | 03 | Protect early payments during direct user deletion | Small | Confirmed bug |
-| 04 | Remove optional payment-export rounding | Small | Confirmed bug; removal proposed |
+| 04 | ~~Remove optional payment-export rounding~~ | Small | **Done** |
 | 05 | Prevent product imports from removing purchased products | Small | Confirmed bug |
 | 06 | Preserve the visible basket after failed checkout | Small to medium | Confirmed bug |
 | 07 | Clear stale edit state on Create and Cancel | Small to medium | Confirmed user bug; analogous product path |
@@ -101,7 +101,7 @@ Code locations below use file paths and function names. Function names are the p
 
 ## 04. Remove optional payment-export rounding
 
-**Status:** Open. **Evidence:** A real Excel-export probe turned 20 DKK into 30 DKK when rounding "Up" to 10. Removal is the preferred proposal from the discussion.
+**Status:** Done (12 October 2026). **Evidence:** Reproduced before the change using an isolated temporary database and a real Excel export: rounding "Up" to 10 turned a 20 DKK purchase with no waste into 30 DKK.
 
 **Issue:** The rounding feature can overcharge amounts that are already exact multiples, and its practical use is unclear.
 
@@ -114,6 +114,12 @@ Code locations below use file paths and function names. Function names are the p
 **Where:** `src/modals.py`: `export_payments_modal()`; `src/main_page_callbacks.py`: `control_payments_modal()`.
 
 **Acceptance:** 20 DKK exports as 20; 12.50 DKK remains 12.50. Existing stock-freshness checks, settled-user behavior, added income, waste allocation and real Excel output still work. Update callback-call tests for the new signature. Relevant tests: `tests/test_waste_allocation.py`, `tests/test_main_page_callbacks.py`.
+
+**Implemented:** Removed both rounding dropdowns, their callback States and parameters, and the final whole-DKK rounding branch. Removed the unused `builtins` import and dropdown CSS. The dialog retains Add income and Confirm. Waste allocation still applies its own rounding policy, and added income is still shared equally only among users with purchases and a positive amount due, including eligible guests. Stock-freshness checks and settled-user handling are unchanged.
+
+**Verification:** `.\.venv\Scripts\python.exe -m pytest -q tests/test_waste_allocation.py tests/test_main_page_callbacks.py` passed **116 tests**. The broader suite, `.\.venv\Scripts\python.exe -m pytest -q --ignore=tests/test_barcode_scan_performance.py`, passed **379 tests**. Real Excel regressions verify unchanged 20 DKK and 12.50 DKK amounts, equal added-income shares, exclusion of settled users and non-buyers with allocated waste, inclusion of eligible guests, and separately rounded persisted waste. Existing export stock checks and warning paths pass with the new callback signature. An isolated Dash app served layout and dependency endpoints successfully and confirmed that the payment callback no longer requests rounding States and the modal has no rounding dropdowns. Performance tests were not rerun because this change does not touch the purchase workflow.
+
+**Separate precision follow-up:** Existing added-income division can produce fractional-cent amounts, and monetary Excel cells use `General` formatting rather than a fixed two-decimal display. With optional rounding already disabled, three buyers owing 12.50 DKK each and 0.01 DKK added income exported approximately 12.50333333333333 DKK each. Plain 12.50 DKK exports as numeric 12.5 without losing value. This issue remains open: assigning cent remainders needs a separate distribution decision, so this removal does not round individual shares or change eligibility.
 
 ## 05. Prevent product imports from removing purchased products
 

@@ -328,7 +328,7 @@ def test_payment_modal_stays_closed_when_economy_tab_renders(monkeypatch, temp_d
 
     # Act
     result = main_page_callbacks.control_payments_modal(
-        None, None, 0, "Up", 0, []
+        None, None, 0, []
     )
 
     # Assert

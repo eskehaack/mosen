@@ -53,7 +53,6 @@ import shutil
 import os
 import tempfile
 import zipfile
-import builtins
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -490,11 +489,9 @@ def download_tables(trigger):
     Input("export_payments_btn", "n_clicks"),
     Input("confirm_payments", "n_clicks"),
     State("added_amount_inp", "value"),
-    State("up_down_dd", "value"),
-    State("round_dd", "value"),
 )
 @db_transaction_result
-def control_payments_modal(open_trigger, close_trigger, added_value, up_down, round):
+def control_payments_modal(open_trigger, close_trigger, added_value):
     trigger = ctx.triggered_id
     if trigger == "export_payments_btn" and open_trigger:
         return True, no_update
@@ -512,15 +509,6 @@ def control_payments_modal(open_trigger, close_trigger, added_value, up_down, ro
         active = (income["#products"] > 0) & (income["price"] > 0)
         if active.any():
             income.loc[active, "price"] += float(added_value) / int(active.sum())
-        if int(round) != 0:
-            if up_down == "Nearest":
-                rounding = lambda x: int(round * builtins.round(float(x) / round))
-            elif up_down == "Up":
-                rounding = lambda x: float(x) + round - (float(x) % round)
-            else:
-                rounding = lambda x: float(x) - (float(x) % round)
-            positive = income["price"] > 0
-            income.loc[positive, "price"] = income.loc[positive, "price"].apply(rounding)
         result = (
             False,
             dcc.send_data_frame(

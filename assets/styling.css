@@ -106,31 +106,3 @@ hr {
     padding: 12px 14px;
     line-height: 1.45;
 }
-
-.payment-dropdown,
-.payment-dropdown .Select-control,
-.payment-dropdown .Select-menu-outer,
-.payment-dropdown .Select-value-label,
-.payment-dropdown .Select-placeholder,
-.payment-dropdown .Select-input > input,
-.payment-dropdown .VirtualizedSelectOption {
-    color: black !important;
-}
-
-.payment-dropdown .Select-control,
-.payment-dropdown .Select-menu-outer,
-.payment-dropdown .Select-option,
-.payment-dropdown .VirtualizedSelectOption {
-    background-color: white;
-}
-
-.payment-dropdown .Select-option.is-focused,
-.payment-dropdown .VirtualizedSelectFocusedOption {
-    background-color: #e9ecef;
-    color: black !important;
-}
-
-.payment-dropdown .Select-option.is-selected {
-    background-color: #dee2e6;
-    color: black !important;
-}
