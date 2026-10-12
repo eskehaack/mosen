@@ -1,6 +1,6 @@
 # Swamp Machine improvement backlog
 
-Review date: 12 October 2026. Baseline: app version 5.0.0; all 369 existing tests passed during the review. Additional isolated probes reproduced the confirmed issues below. This file records proposed work; the application has not been changed as part of creating it.
+Review date: 12 October 2026. Baseline: app version 5.0.0; all 369 existing tests passed during the review. Additional isolated probes reproduced the confirmed issues below. This file records proposed work and completed maintenance; item statuses are updated as work is finished.
 
 ## How to use this file
 
@@ -30,8 +30,8 @@ Code locations below use file paths and function names. Function names are the p
 
 | Order | Item | Approximate scope | Evidence / priority |
 | --- | --- | --- | --- |
-| 01 | Fix Reset data | Small | Confirmed bug |
-| 02 | Give stock inputs unique identities while preserving names | Small | Confirmed bug |
+| 01 | ~~Fix Reset data~~ | Small | **Done** |
+| 02 | ~~Require unique product names~~ | Small | **Done** |
 | 03 | Protect early payments during direct user deletion | Small | Confirmed bug |
 | 04 | Remove optional payment-export rounding | Small | Confirmed bug; removal proposed |
 | 05 | Prevent product imports from removing purchased products | Small | Confirmed bug |
@@ -40,17 +40,12 @@ Code locations below use file paths and function names. Function names are the p
 | 08 | Validate numeric values before table replacement | Medium | Confirmed bug in shared table logic |
 | 09 | Refresh settings after successful changes | Medium | Confirmed callback/design issue |
 | 10 | Make backups consistent without holding up buying | Medium | Confirmed unsafe copy; implementation proposal |
-| 11 | Add compact scanning instructions | Small | Optional usability idea |
-| 12 | Show basket subtotal and total quantity | Small to medium | Optional usability idea |
-| 13 | Show brief confirmation after a saved purchase | Small to medium | Optional usability idea |
-| 14 | Keep the scanner field visible with long baskets | Small | Optional usability idea |
-| 15 | Validate rapid scanning through the browser | Investigation | Reliability coverage; suspected race unconfirmed |
-| 16 | Aggregate economy/payment totals once | Small to medium | Deferred admin performance work |
+| 12 | Show the current basket's price and item count | Small to medium | Optional usability idea |
 | 17 | Validate transaction references once per batch | Medium | Deferred admin performance work |
 
 ## 01. Fix Reset data
 
-**Status:** Complete (12 October 2026). **Evidence:** Reproduced through the reset callback with a temporary database and keyboard functions patched before applying the fix.
+**Status:** Done (12 October 2026). **Evidence:** Reproduced through the reset callback with a temporary database and keyboard functions patched before applying the fix.
 
 **Issue:** Reset fails with `near "IF": syntax error`, and the existing data remains.
 
@@ -68,21 +63,25 @@ Code locations below use file paths and function names. Function names are the p
 
 **Verification:** Final verification with `.\.venv\Scripts\python.exe -m pytest -q --ignore=tests/test_barcode_scan_performance.py` passed **372 tests**, including 15 new regressions for populated custom-path reset, defaults after reopening, connection cleanup/ownership, rollback during DROP/recreation/default writes, reset dialog success/cancel/error behavior, standalone creation failures preserving the original SQL error, and owner-only cache refresh for nested exceptions and rollback results. A schema-only rollback test verifies that the common transaction helper rolls back DROP/CREATE statements even after a nested commit request. The 12 barcode-performance cases passed in the preceding full run of 382 tests, before the final rollback-only change to reuse `init()`. Reset tests use isolated temporary databases and stubbed keyboard actions.
 
-## 02. Give stock inputs unique identities while preserving names
+## 02. Require unique product names
 
-**Status:** Open. **Evidence:** Two valid products named "Cola" produce a Dash `DuplicateIdError` during layout validation.
+**Status:** Done (12 October 2026). **Evidence:** Before the fix, two products named "Cola" were accepted and created stock fields with the same ID, which prevented Dash from loading the layout.
 
-**Issue:** Duplicate product names can prevent the app layout from loading, including after a restart.
+**Issue:** Duplicate product names could prevent the app from loading, including after a restart.
 
-**Why it matters:** Products with different barcodes can legitimately share a name. Importing such rows should not make the machine unusable.
+**Why it matters:** Importing or saving conflicting product names should fail before it can make the machine unusable. Product names must remain visible in the existing stock controls.
 
-**Cause:** `update_stock_modal()` uses the product name as the `index` of each `new_stock_inp` component ID. Names are not required to be unique.
+**Cause:** The stock dialog identifies each input by product name. Duplicate names therefore produced duplicate input IDs.
 
-**Proposed change:** Use the product barcode as the internal input identity. Keep the name visible; displaying a label such as `101 - Cola` would distinguish duplicates. Pair submitted stock values with their barcode IDs instead of assuming their positions match the current product-table order. Enforcing unique names is an alternative domain decision, not necessary for this component fix.
+**Chosen change:** Require unique product names during product writes. Compare names as stored strings, preserving case and whitespace. Reject duplicate names before writing, including conflicts within an import or append batch and conflicts with existing products during append. An existing product can keep its own name when edited. Keep the stock controls and their callback signatures unchanged.
 
-**Where:** `src/modals.py`: `update_stock_modal()`; `src/tables/prod_callbacks.py`: `open_stock()`, `confirm_new_stock()`.
+**Where:** `src/database/tables/product.py`: `ProductTable.is_valid_batch()`; existing callers in `BaseTable.set()` and `BaseTable.append()`.
 
-**Acceptance:** Two products with the same name render successfully, both names remain visible, and different stock values are saved to the correct barcodes. Check reordered rows too. Relevant tests: `tests/test_prod_callbacks.py`; add a focused layout-validation regression.
+**Acceptance:** Product creation, editing and imports reject duplicate names and report the offending rows. Failed batches preserve both stored products and the cache. Editing a product while retaining its own name still succeeds. No name validation is added to basket opening, product scanning or checkout.
+
+**Implemented:** Added a product-specific name check to the existing batch validation. It covers replacement and append writes without changing shared table code, the database schema or scan/checkout logic. Names that become the same stored string, such as numeric `123` and text `"123"`, are treated as duplicates. Validation runs only for product writes.
+
+**Verification:** `.\.venv\Scripts\python.exe -m pytest -q --ignore=tests/test_barcode_scan_performance.py` passed **377 tests**, including five new cases for duplicate names, replacement/append rejection, conflicts with existing products and preservation of stored rows/cache. Existing product-edit tests verify that retaining a product's own name remains valid. The three basket-opening, product-scan and checkout tests in `tests/test_barcode_scan_performance.py` also passed their existing callback-workflow limits of 300 ms, 100 ms and 400 ms respectively.
 
 ## 03. Protect early payments during direct user deletion
 
@@ -216,101 +215,23 @@ Code locations below use file paths and function names. Function names are the p
 
 **Acceptance:** Concurrent purchases and periodic backups produce readable snapshots of committed data, without errors or overlap. A failed backup is not advertised as complete. A required pre-action backup failure prevents that action. Existing pre-import/deletion snapshot tests still pass. Measure purchase latency with backups active on realistic data; the review's 176 KB database took roughly 6-8 ms to back up on one machine, not a target-laptop guarantee.
 
-## 11. Add compact scanning instructions
-
-**Status:** Open, optional. **Evidence:** The main scanner input has no label/placeholder explaining how to start; finishing requires rescanning the user barcode.
-
-**Issue:** A first-time user must learn the scan sequence from someone else.
-
-**Why it matters:** A short instruction can reduce mistakes and assistance during busy trip periods.
-
-**Cause:** The scan sequence is implemented but only lightly explained on screen.
-
-**Proposed change:** Add concise text near the main input and in the basket: scan your user barcode, scan products, then scan your user barcode again to save. Confirm the wording against multiplier/cancel behavior. Keep the input focused and avoid extra dialogs or steps.
-
-**Where:** `src/main_layout.py`: `layout_func()`; `src/trans_layout.py`: `trans_modal()`.
-
-**Acceptance:** Instructions fit the kiosk screen, accurately describe the flow, and leave keyboard/barcode operation unchanged. Visual/manual verification is sufficient for this text/layout change.
-
-## 12. Show basket subtotal and total quantity
+## 12. Show the current basket's price and item count
 
 **Status:** Open, optional. **Evidence:** The basket displays counts per product, while its header's bill describes previous purchases rather than the pending basket subtotal.
 
 **Issue:** Users cannot easily check the total amount or total number of items they are about to buy.
 
-**Why it matters:** Immediate feedback helps detect an extra scan or wrong multiplier before checkout.
+**Example:** A person already owes approximately 20 DKK from earlier purchases and any waste estimate. They now scan two beers at 10 DKK each and one cola at 5 DKK. The existing header still describes that earlier bill, and the product list shows `2x: Beer` and `1x: Cola`. This proposal adds `Current basket: 3 items - 25.00 DKK`. The count includes every unit, not just the two different product types. The basket price excludes previous purchases and waste.
 
-**Cause:** `new_trans()` renders names and per-product counts without a subtotal. The historical bill is calculated separately.
+**Why it matters:** A combined price and count could help someone spot an extra scan or wrong multiplier before checkout. This is an optional convenience; no checkout or accounting bug has been demonstrated here.
+
+**Cause:** `new_trans()` renders names and per-product counts without combined totals. `show_balance()` reads saved purchases and a waste estimate when the basket opens; it does not calculate the pending basket's price after each product scan.
 
 **Proposed change:** Add a clearly labelled pending-basket subtotal and total item count, calculated from current products and the basket. Preserve the visible product names and distinguish this subtotal from the historical bill/waste preview. Derive it from current data without another full-history calculation on every product scan.
 
 **Where:** `src/trans_layout.py`: `new_trans()`, `show_balance()`, `trans_modal()`.
 
-**Acceptance:** Feedback updates for additions, multipliers and cancellation, resets for a fresh basket, and remains correct after failed checkout. Check decimal prices and repeated products. Prerequisite: item 06; coordinate with item 14's layout. Relevant tests: `tests/test_open_trans_modal.py`; manually inspect layout and scan responsiveness.
-
-## 13. Show brief confirmation after a saved purchase
-
-**Status:** Open, optional. **Evidence:** Successful checkout closes the basket but has no explicit saved-purchase message.
-
-**Issue:** A user may be uncertain whether their purchase was recorded.
-
-**Why it matters:** Clear completion feedback discourages unnecessary rescanning and helps distinguish success from an error.
-
-**Cause:** The successful checkout callback primarily closes the modal and clears input.
-
-**Proposed change:** Show a short, nonblocking confirmation only after commit, ideally identifying the person and item count. Let it clear automatically. Keep the main scanner ready for the next person; no acknowledgement button or animation that holds up scanning.
-
-**Where:** `src/trans_layout.py`: `open_trans_modal()`, `checkout_cart_to()`; a small status surface in `src/main_layout.py`.
-
-**Acceptance:** Real successful checkout shows feedback; failed checkout does not. Feedback does not steal focus, interrupt the next scan or report an empty/repeated checkout as a new purchase. Coordinate with item 06. Check success/failure callbacks and manually verify rapid consecutive users.
-
-## 14. Keep the scanner field visible with long baskets
-
-**Status:** Open, optional. **Evidence:** The product list is unbounded and sits above the barcode input in the fullscreen basket.
-
-**Issue:** A basket containing many different products can push the scanner field below the visible screen.
-
-**Why it matters:** The user should always see where scans go and how to continue checkout, especially on small laptop screens.
-
-**Cause:** The basket body expands with the product list and chart without a bounded list region or a persistent input area.
-
-**Proposed change:** Bound the product-list/graph area and allow scrolling within it, keeping the barcode input and essential basket feedback visible. Prefer a small layout/CSS change. Keep names and quantities legible; avoid clipping essential content.
-
-**Where:** `src/trans_layout.py`: `trans_modal()`; `assets/styling.css`.
-
-**Acceptance:** Small laptop viewports and long mixed baskets retain a visible, focused input. Short baskets still look normal. Manually verify keyboard focus, scrolling and a rapid scan sequence; do not add tests that merely mirror CSS declarations.
-
-## 15. Validate rapid scanning through the browser
-
-**Status:** Open, investigation. **Evidence:** Existing performance tests explicitly measure callbacks, excluding browser rendering and transport. The suspected lost-input race has not been reproduced.
-
-**Issue:** A delayed server response that clears `prod_barcode.value` might erase the beginning of the next scan. It is not yet established that the normal browser/scanner flow allows this race.
-
-**Why it matters:** Correct counts and uninterrupted scanning matter more than a faster bulk-import benchmark.
-
-**Cause to investigate:** Input is cleared by a server response while real scanners type characters and submit Enter. Existing concurrent function calls do not simulate that interaction.
-
-**Proposed change:** First reproduce realistic scan bursts in a browser with deliberately delayed responses. Use fewer than 300 users and a history within the expected trip range. If input is lost or scans are duplicated, fix the smallest demonstrated sequencing/input-clearing problem. If it is reliable, record the evidence and close this as an investigation without changing production behavior.
-
-**Where:** `app.py`: focus callbacks; `src/trans_layout.py`: input/submit callbacks; `tests/test_barcode_scan_performance.py` for the existing coverage boundary.
-
-**Acceptance:** Every intended scan is recorded exactly once; input clearing never truncates the next barcode; checkout remains correct; focus survives errors. Include response/render time and background backup overlap where practical. Use an actual scanner/target laptop if available, or document the limits of the browser simulation.
-
-## 16. Aggregate economy/payment totals once
-
-**Status:** Deferred. **Evidence:** A synthetic 500-user/30,000-purchase probe reduced calculation time from about 3.1 seconds to 0.1 seconds with matching totals. That dataset exceeds expected trips and excluded database-read time.
-
-**Issue:** Economy/export calculation repeatedly filters the entire transaction table for each user.
-
-**Why it matters:** It can slow admin views and export, but it is not evidence that normal buying is slow. Revisit only when the admin delay is worth the change.
-
-**Cause:** `get_income()` filters transactions twice per user and rebuilds a product-key list per transaction.
-
-**Proposed change:** Map product prices once and group purchase totals/counts once, then apply the existing per-user payment/waste rules. Preserve output rows and fields, settled-user behavior, no-purchase users and unknown-allocation semantics. Measure realistic data before deciding whether to implement.
-
-**Where:** `src/analytics/trans_calculations.py`: `get_income()`; `src/main_layout.py`: `transaction_settings_layout()`.
-
-**Acceptance if implemented:** Equivalent amounts/counts and export results for existing cases; meaningful measured improvement in the affected admin workflow. Relevant tests: `tests/test_waste_allocation.py`, `tests/test_main_page_callbacks.py`. Do not describe a synthetic aggregation speedup as an end-to-end purchase speedup.
+**Acceptance:** Feedback updates for additions, multipliers and product removal, resets for a fresh basket, and remains correct after failed checkout. Check decimal prices and repeated products. Prerequisite: item 06. Relevant tests: `tests/test_open_trans_modal.py`; manually inspect layout and scan responsiveness.
 
 ## 17. Validate transaction references once per batch
 
@@ -327,6 +248,16 @@ Code locations below use file paths and function names. Function names are the p
 **Where:** `src/database/tables/transaction.py`: `is_valid_batch()`, `_validate_product_exists()`, `_validate_user_exists()`; batching in `src/database/tables/base_table.py`.
 
 **Acceptance if implemented:** Valid and invalid batches behave identically; changing users/products affects the next batch; failed writes roll back. Profile ordinary checkout too and avoid regressing it. Relevant tests: `tests/test_constraints_and_atomicity.py`, `tests/test_transaction_atomicity.py`, `tests/test_transaction_rollback_behavior.py`, `tests/test_barcode_scan_performance.py`.
+
+## Removed ideas
+
+Items 11, 13, 14, 15 and 16 were removed from the active backlog on 12 October 2026. Remaining item numbers are unchanged.
+
+- **11 - Scanning instructions:** No user confusion has been demonstrated. Extra guidance is optional UI work without an established need.
+- **13 - Saved-purchase confirmation:** Successful checkout already closes the basket. An additional message has no demonstrated need.
+- **14 - Persistent scanner visibility:** The fullscreen modal body already scrolls (`assets/bootstrap.css`). No failure on an actual laptop viewport has been reproduced.
+- **15 - Browser scan investigation:** No lost or duplicated scan has been reproduced. Callback-only tests leave browser behavior unverified; check consecutive browser/scanner input when changing the scan flow rather than scheduling a speculative fix.
+- **16 - Economy/payment aggregation:** The recorded speedup used 500 users and 30,000 purchases, beyond expected trips. No meaningful admin delay at realistic scale has been established; reconsider after measuring one.
 
 ## Performance evidence to retain
 

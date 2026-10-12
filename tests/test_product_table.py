@@ -503,3 +503,42 @@ class TestProductTableSetAtomicity:
         current_state = table.get_untyped()
         assert len(current_state) == 1
         assert current_state.iloc[0]["barcode"] == "123"
+
+
+def _product_row(barcode, name):
+    return {
+        "barcode": barcode, "name": name, "price": 5.0, "category": "Drinks",
+        "current_stock": 10, "initial_stock": 20,
+    }
+
+
+@pytest.mark.parametrize("operation", ["set", "append"])
+@pytest.mark.parametrize("names", [("Cola", "Cola"), (123, "123")], ids=["same-name", "same-stored-name"])
+def test_duplicate_product_names_reject_batch_and_preserve_database_and_cache(test_db, operation, names):
+    table = test_db._product_table
+    table.set([_product_row(123, "Beer")])
+    before = table.get_untyped()
+    rows = [_product_row(456, names[0]), _product_row(789, names[1])]
+
+    result, bad_rows = getattr(table, operation)(rows)
+
+    assert result == "prods"
+    assert bad_rows == rows
+    pd.testing.assert_frame_equal(table.get_untyped(), before)
+    stored_rows = test_db._connection.get_query("SELECT * FROM prods", list(before.columns))
+    pd.testing.assert_frame_equal(stored_rows, before)
+
+
+def test_appending_existing_product_name_rejects_entire_batch_and_preserves_data(test_db):
+    table = test_db._product_table
+    table.set([_product_row(123, "Beer")])
+    before = table.get_untyped()
+    rows = [_product_row(456, "Cola"), _product_row(789, "Beer")]
+
+    result, bad_rows = table.append(rows)
+
+    assert result == "prods"
+    assert bad_rows == [rows[1]]
+    pd.testing.assert_frame_equal(table.get_untyped(), before)
+    stored_rows = test_db._connection.get_query("SELECT * FROM prods", list(before.columns))
+    pd.testing.assert_frame_equal(stored_rows, before)

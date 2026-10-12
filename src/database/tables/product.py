@@ -25,3 +25,9 @@ class ProductTable(BaseTable):
             initial_stock varchar(255)
         )
     """
+
+    def is_valid_batch(self, row: dict, all_rows: list) -> bool:
+        if not super().is_valid_batch(row, all_rows):
+            return False
+        name = str(row["name"])
+        return sum(str(other.get("name")) == name for other in all_rows) <= 1
