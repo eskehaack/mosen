@@ -1,7 +1,7 @@
 import pytest
 
 from src.container import Container
-from src.data_connection import Database
+from src.database.data_connection import Database
 
 
 class TestContainer:
@@ -15,13 +15,15 @@ class TestContainer:
 
     def test_set_registers_instance_by_type(self):
         # Arrange
-        db = Database(":memory:")
+        class ServiceA:
+            pass
+        service_a = ServiceA()
         
         # Act
-        Container.set(Database, db)
+        Container.set(ServiceA, service_a)
         
         # Assert
-        assert Container.get(Database) is db
+        assert Container.get(ServiceA) is service_a
 
     def test_get_raises_error_when_not_initialized(self):
         # Arrange
@@ -33,8 +35,10 @@ class TestContainer:
 
     def test_reset_clears_registered_instances(self):
         # Arrange
-        db = Database(":memory:")
-        Container.set(Database, db)
+        class ServiceA:
+            pass
+
+        Container.set(ServiceA, ServiceA())
         
         # Act
         Container.reset()
@@ -62,12 +66,3 @@ class TestContainer:
         assert Container.get(ServiceA) is service_a
         assert Container.get(ServiceB) is service_b
 
-    def test_database_initializes_automatically(self):
-        # Arrange & Act
-        db = Database(":memory:")
-        Container.set(Database, db)
-        retrieved_db = Container.get(Database)
-        
-        # Assert
-        assert isinstance(retrieved_db, Database)
-        assert retrieved_db.data_file == ":memory:"

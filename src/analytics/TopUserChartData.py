@@ -1,31 +1,17 @@
-import threading
-from src.data_connection import Database,get_prods
+from src.container import Container
+from src.database.data_connection import Database, get_prods
+from src.analytics.bar_chart_format import format_count_bar_chart
+import pandas as pd
 import plotly.express as px
 
 class TopUserChartData:
-    """Class to cache db callsand generate top user charts
+    """Class to cache db calls and generate top user charts"""
 
-    (This adds state to a stateless framework, but it works since there is only 1 client)"""
-    # region Singleton pattern
-    _instance = None
-    _lock = threading.Lock()
-
-
-    def __new__(cls):
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-                cls._instance._initialized = False
-        return cls._instance
 
     def __init__(self,x_top=10):
-        if self._initialized:
-            return
         self.all_user_products = None
         self.x_top = x_top
         self.refresh()
-        self._initialized = True
-    # endregion
 
     # region bussiness logic
     def refresh(self):
@@ -39,6 +25,7 @@ class TopUserChartData:
 
     def get_chart(self, selected_products:list)-> px.bar:
         """returns a barchart with the top buyers of selected_products based last refresh"""
+        selected_products = selected_products or []
         selected_user_products = self.all_user_products[self.all_user_products['product'].isin(selected_products)]
         user_totals = (
             selected_user_products
@@ -52,11 +39,14 @@ class TopUserChartData:
             .to_list()
         )
         selected_user_products = selected_user_products[selected_user_products['user'].isin(top_x_users)]
-        return px.bar(selected_user_products,x="user",y="amount",color="product")
+        fig = px.bar(selected_user_products, x="user", y="amount", color="product")
+        return format_count_bar_chart(fig)
 
     def get_verbose_user_products(self):
         """get user products with all possible combinations listed (ie. all rows with amount = 0 are included)"""
         all_user_products = self.__class__.query_user_products()
+        if all_user_products.empty:
+            return pd.DataFrame(columns=self.__db_cols).astype(self.__db_dtypes)
         all_user_products = (
             all_user_products
             .pivot_table(index="user", columns="product", values="amount", fill_value=0)
@@ -82,7 +72,7 @@ class TopUserChartData:
     __db_cols = [col for col,_ in __db_dtypes.items()]
     @classmethod
     def query_user_products(cls):
-        user_products = Database().get_query(cls.__db_query,cls.__db_cols)
+        user_products = Container.get(Database).get_query(cls.__db_query,cls.__db_cols)
         typed_user_products = user_products.astype(cls.__db_dtypes)
         return typed_user_products
     # endregion

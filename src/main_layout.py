@@ -6,9 +6,11 @@ import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import os
-from src.TopUserChartData import TopUserChartData
-from src.tables.prod_table import get_waste_table
-from src.tables.trans_table import (
+from src.container import Container
+from src.analytics.TopUserChartData import TopUserChartData
+from src.analytics.product_calculations import get_waste_table
+from src.analytics.waste_allocation import get_strategy_options
+from src.analytics.trans_calculations import (
     get_revenue,
     get_income,
     get_total_income,
@@ -19,29 +21,36 @@ from src.modals import (
     new_prod_modal,
     update_stock_modal,
     password_modal,
+    documentation_modal,
     export_payments_modal,
-    export_barcodes_mdl,
+    remove_transaction_modal,
     bad_rows_mdl,
     edit_modal,
     reset_modal,
     study_users_modal,
 )
 from src.trans_layout import trans_modal
-from src.error_handler import get_error_view_components,append_error
-from src.main_page_callbacks import create_overview
+from src.error_handler import get_error_view_components,append_error,callback_with_error_queue
+from src.analytics.overview_plot import create_overview
 from src.components import get_upload, get_table
-from src.data_connection import (
+from src import main_page_callbacks  # Register main page callbacks
+from src.tables import prod_callbacks  # Register product callbacks
+from src.tables import user_callbacks  # Register user callbacks
+from src.database.data_connection import (
     get_prods,
     get_trans,
     get_users,
     get_password,
     get_show_bill,
     get_waste,
+    get_waste_strategy,
     get_backup_time,
+    get_cache_validation_time,
+    get_backup_interval_ms,
+    get_cache_validation_interval_ms,
+    get_bill_preview_waste_extra_percent,
 )
-from src.tables.user_table import init
-
-users_init = init()
+from src import cache_validation  # register cache validation callback
 
 
 def user_settings_layout():
@@ -171,8 +180,12 @@ def product_settings_layout():
 
 def transaction_settings_layout():
     waste = get_waste()
-    num_users = len(get_users())
-    user_waste = 0 if num_users == 0 else int(waste / num_users)
+    users = get_users()
+    income_rows = get_income()
+    allocated_waste = (
+        users[users["waste_cents"].astype(int) >= 0]["waste_cents"].astype(int).sum()
+        / 100
+    )
     layout = dbc.Container(
         [
             html.Div(
@@ -187,11 +200,11 @@ def transaction_settings_layout():
                                     html.Hr(),
                                     html.P(f"Current Revenue: {get_revenue()}"),
                                     html.Hr(),
-                                    html.P(
-                                        f"Current Waste: {waste} ({user_waste} pr. user)"
-                                    ),
+                                    html.P(f"Raw Waste: {waste}"),
+                                    html.P(f"Allocated Waste: {allocated_waste}"),
+                                    html.P(f"Next Strategy: {get_waste_strategy()}"),
                                     html.Hr(),
-                                    html.P(f"Current Return: {get_current_return()}"),
+                                    html.P(f"Stock Value: {get_current_return()}"),
                                     html.Hr(),
                                     dbc.Button(
                                         "Export payments", id="export_payments_btn"
@@ -215,6 +228,14 @@ def transaction_settings_layout():
                                         "Study Users",
                                         id="study_users_btn",
                                     ),
+                                    html.Hr(),
+                                    dbc.Button(
+                                        "Remove selected transaction",
+                                        id="remove_transaction_btn",
+                                        color="danger",
+                                        outline=True,
+                                        disabled=True,
+                                    ),
                                 ]
                             ),
                             width=3,
@@ -226,9 +247,25 @@ def transaction_settings_layout():
                                         "trans_table",
                                         get_trans().to_dict(orient="records"),
                                         200,
+                                        row_selectable="single",
                                     ),
                                     html.Hr(),
-                                    get_table("income_table", get_income(), 200),
+                                    html.Label(
+                                        "Find user by name or barcode",
+                                        htmlFor="income_search",
+                                    ),
+                                    dbc.Input(
+                                        id="income_search",
+                                        placeholder="Type a name or scan a barcode",
+                                        type="text",
+                                        autoComplete="off",
+                                    ),
+                                    html.Div(
+                                        id="income_search_status",
+                                        className="text-danger",
+                                        style={"minHeight": "24px"},
+                                    ),
+                                    get_table("income_table", income_rows, 200),
                                 ]
                             ),
                             width=9,
@@ -239,8 +276,12 @@ def transaction_settings_layout():
             ),
             dcc.Store(id="placeholder_for_empty_output"),
             export_payments_modal(),
+            remove_transaction_modal(),
             study_users_modal(),
             dcc.Download(id="payments_download"),
+            dcc.Store(id="pending_transaction_removal"),
+            dcc.Store(id="income_table_all_rows", data=income_rows),
+            dcc.Store(id="income_lookup_focus"),
             dcc.Store(id={"index": "transactions", "type": "bad_rows"}),
         ],
     )
@@ -265,6 +306,24 @@ def settings_settings_layout():
                                                 "index": "users",
                                                 "type": "show_upload_file",
                                             }
+                                        ),
+                                        width=4,
+                                    ),
+                                ]
+                            ),
+                            width=12,
+                        ),
+                        html.Hr(),
+                        dbc.Col(
+                            dbc.Row(
+                                [
+                                    dbc.Col(html.P("Waste allocation:"), width=4),
+                                    dbc.Col(
+                                        dcc.Dropdown(
+                                            get_strategy_options(),
+                                            value=get_waste_strategy(),
+                                            clearable=False,
+                                            id="waste_strategy",
                                         ),
                                         width=4,
                                     ),
@@ -321,15 +380,34 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(html.P("Display current bill: "), width=4),
+                                    dbc.Col(html.P("Bill preview: "), xs=12, lg=4),
                                     dbc.Col(
                                         dbc.Switch(
                                             id="display_bill_switch",
                                             value=get_show_bill(),
                                             className="d-grid gap-2 col-10 mx-auto",
-                                        )
+                                        ),
+                                        xs=12,
+                                        lg=4,
                                     ),
-                                ]
+                                    dbc.Col(
+                                        dbc.InputGroup(
+                                            [
+                                                dbc.InputGroupText("Extra waste (%)"),
+                                                dbc.Input(
+                                                    value=get_bill_preview_waste_extra_percent(),
+                                                    id="bill_preview_waste_extra_percent",
+                                                    type="number",
+                                                    min=0,
+                                                ),
+                                            ]
+                                        ),
+                                        xs=12,
+                                        lg=4,
+                                    ),
+                                ],
+                                id="bill_preview_row",
+                                align="center",
                             ),
                             width=12,
                         ),
@@ -337,21 +415,85 @@ def settings_settings_layout():
                         dbc.Col(
                             dbc.Row(
                                 [
-                                    dbc.Col(html.P("Backup Timer"), width=4),
                                     dbc.Col(
-                                        dbc.Input(
-                                            value=get_backup_time(),
-                                            id="settings_backup_time",
-                                            type="number",
-                                            minLength=0,
+                                        html.P("Toggle top user chart"), xs=12, lg=4
+                                    ),
+                                    dbc.Col(
+                                        dbc.Switch(
+                                            id="toggle_top_user_chart",
+                                            value=False,
+                                            className="d-grid gap-2 col-10 mx-auto",
                                         ),
-                                        width=4,
+                                        xs=12,
+                                        lg=4,
+                                    ),
+                                ],
+                                id="top_user_chart_row",
+                                align="center",
+                            ),
+                            width=12,
+                        ),
+                        dbc.Tooltip(
+                            """Forged in response to injustice.
+
+After the Drinker of Cocio claimed his second consecutive OPtur title, the evil Beverage KABS refused to verify his glory in the database.
+
+Now, with the sacred hat-trick complete, this feature ensures that the champions of the Swamp Machine may forever be found, ranked, and remembered.
+
+WARNING: Do not use this on intro trips. It shows individual user data, so only use it for prep trips or similar events.""",
+                            className="wide-tooltip",
+                            target="toggle_top_user_chart",
+                        ),
+                        html.Hr(),
+                        dbc.Col(
+                            dbc.Row(
+                                [
+                                    dbc.Col(html.P("Timers:"), xs=12, lg=4),
+                                    dbc.Col(
+                                        dbc.InputGroup(
+                                            [
+                                                dbc.InputGroupText("Backup (min)"),
+                                                dbc.Input(
+                                                    value=get_backup_time(),
+                                                    id="settings_backup_time",
+                                                    type="number",
+                                                    minLength=0,
+                                                ),
+                                            ]
+                                        ),
+                                        xs=12,
+                                        lg=4,
+                                    ),
+                                    dbc.Col(
+                                        dbc.InputGroup(
+                                            [
+                                                dbc.InputGroupText(
+                                                    "Cache validation (min)"
+                                                ),
+                                                dbc.Input(
+                                                    value=get_cache_validation_time(),
+                                                    id="settings_cache_validation_time",
+                                                    type="number",
+                                                    minLength=0,
+                                                ),
+                                            ]
+                                        ),
+                                        xs=12,
+                                        lg=4,
                                     ),
                                     dbc.Tooltip(
                                         children="Timer for making backups of the database. Timer is set in minutes. Backups are stored in dedicated 'backups' folder. Setting this to 0, means the program will not create backups, and you will be on your own when the app inevitabily fails you",
                                         target="settings_backup_time",
+                                        placement="right",
+                                    ),
+                                    dbc.Tooltip(
+                                        children="Timer for checking if the cache is outdated. It should never happen, but just in case it will trigger a frontend error. This check blocks all other queries while it runs, so setting it to a very low value might cause performance issues. Setting it to 0 means the app will never validate the cache, which means that if it ever gets stale, you will be on your own.",
+                                        target="settings_cache_validation_time",
+                                        className="wide-tooltip",
+                                        placement="right",
                                     ),
                                 ],
+                                id="timers_row",
                                 align="center",
                             ),
                             width=12,
@@ -386,6 +528,61 @@ def settings_settings_layout():
                         ),
                         html.Hr(),
                         dbc.Col(
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        [
+                                            html.P(
+                                                "Diagnostics",
+                                                className="fw-bold mb-1",
+                                            ),
+                                            html.Small(
+                                                "Attach the downloaded ZIP when reporting "
+                                                "a problem. Error messages may contain "
+                                                "failed input.",
+                                                className="text-muted",
+                                            ),
+                                        ],
+                                        xs=12,
+                                        lg=4,
+                                    ),
+                                    dbc.Col(
+                                        [
+                                            html.Small(
+                                                "Logging status",
+                                                className="text-muted d-block mb-1",
+                                            ),
+                                            html.P(
+                                                "Checked when Settings opens.",
+                                                id="diagnostics_status",
+                                                className="mb-0",
+                                            ),
+                                        ],
+                                        xs=12,
+                                        lg=4,
+                                    ),
+                                    dbc.Col(
+                                        [
+                                            dbc.Button(
+                                                "Download diagnostic logs",
+                                                id="download_diagnostics_btn",
+                                                disabled=True,
+                                                className="d-grid gap-2 col-10 mx-auto",
+                                            ),
+                                            dcc.Download(id="diagnostics_download"),
+                                        ],
+                                        xs=12,
+                                        lg=4,
+                                    ),
+                                ],
+                                id="diagnostics_row",
+                                className="g-3",
+                                align="center",
+                            ),
+                            width=12,
+                        ),
+                        html.Hr(),
+                        dbc.Col(
                             [
                                 dbc.Row(
                                     [
@@ -395,7 +592,7 @@ def settings_settings_layout():
                                                 id="export_barcodes_btn",
                                                 className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=3,
+                                            width=4,
                                         ),
                                         dbc.Col(
                                             dbc.Button(
@@ -404,7 +601,7 @@ def settings_settings_layout():
                                                 color="danger",
                                                 className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=3,
+                                            width=4,
                                         ),
                                         dbc.Col(
                                             dbc.Button(
@@ -412,19 +609,12 @@ def settings_settings_layout():
                                                 id="close_app_btn",
                                                 className="d-grid gap-2 col-10 mx-auto",
                                             ),
-                                            width=3,
-                                        ),
-                                        dbc.Col(
-                                            dbc.Button(
-                                                "Toggle top user chart",
-                                                id="toggle_top_user_chart",
-                                                className="d-grid gap-2 col-10 mx-auto",
-                                            ),
-                                            width=3,
+                                            width=4,
                                         ),
                                     ],
                                     align="center",
                                 ),
+                                dcc.Download(id="pdf_download"),
                             ],
                             width=12,
                         ),
@@ -457,7 +647,6 @@ def settings_settings_layout():
                 fade=True,
                 duration=4000,
             ),
-            export_barcodes_mdl(),
             bad_rows_mdl(),
             reset_modal(),
         ]
@@ -507,7 +696,7 @@ def settings_mode_func():
     )
 
 def top_user_chart_modal():
-    data = TopUserChartData()
+    data = Container.get(TopUserChartData)
     return dbc.Modal(
         [
             dbc.ModalHeader(html.H1("Top Buyers")),
@@ -640,23 +829,23 @@ def layout_func():
             settings_mode_func(),
             trans_modal(),
             password_modal(),
+            documentation_modal(),
             edit_modal(),
             top_user_chart_modal(),
             dcc.Store(id="update_settings"),
-            dbc.Alert(
-                "There are no users, ya dumb dumb!",
-                color="danger",
-                id="bad_barcode_alert",
-                is_open=False,
-                fade=True,
-                duration=4000,
-            ),
+            dcc.Store(id="transaction_removal_revision"),
             dcc.Store(id="retain_focus_main", data=None),
             dcc.Store(id="retain_focus_prod", data=None),
+            dcc.Store(id="retain_focus_password", data=None),
             dcc.Interval(
                 id="backup_interval",
-                interval=get_backup_time(),
+                interval=get_backup_interval_ms(),
                 n_intervals=0,  # default ten minutes
+            ),
+            dcc.Interval(
+                id="cache_validation_interval",
+                interval=get_cache_validation_interval_ms(),
+                n_intervals=0,
             ),
             dcc.Store(id="backup_filename", data=None),
         ]
@@ -703,14 +892,17 @@ def open_settings(trigger, trigger_enter, password, error_queue):
 @callback(
     Output("top_user_chart_modal", "is_open"),
     Output('products_selector', 'options'),
+    Output('products_selector', 'value', allow_duplicate=True),
     Input("open_top_user_chart", "n_clicks"),
+    prevent_initial_call=True,
 )
 def open_report(trigger):
     if trigger:
-        data = TopUserChartData()
+        data = Container.get(TopUserChartData)
         data.refresh()
-        return True, data.all_products
-    return no_update, no_update
+        options = [{'label': product, 'value': product} for product in data.all_products]
+        return True, options, data.all_products
+    return no_update, no_update, no_update
 
 @callback(
     Output("top_user_chart", "figure"),
@@ -720,7 +912,7 @@ def open_report(trigger):
 def update_top_user_chart(is_open,selected_traces):
     if not is_open:
         return no_update
-    fig = TopUserChartData().get_chart(selected_traces)
+    fig = Container.get(TopUserChartData).get_chart(selected_traces)
     fig.update_layout(
         legend_itemclick=False,
         legend_itemdoubleclick=False,
@@ -730,15 +922,14 @@ def update_top_user_chart(is_open,selected_traces):
 
 @callback(
     Output("open_top_user_chart_wrapper", "style"),
-    Input("toggle_top_user_chart", "n_clicks"),
+    Input("toggle_top_user_chart", "value"),
     State("open_top_user_chart_wrapper", "style"),
     prevent_initial_call=True
 )
-def toggle_visibility(n, current_style):
-    if current_style and current_style.get("visibility") == "hidden":
+def toggle_visibility(value, current_style):
+    if value:
         return {"visibility": "visible"}
-    else:
-        return {"visibility": "hidden"}
+    return {"visibility": "hidden"}
 
 @app.callback(
     Output('products_selector', 'value'),
@@ -748,7 +939,8 @@ def toggle_visibility(n, current_style):
 def toggle_checkboxes(n_clicks, current_values):
     if not n_clicks:
         return no_update
-    product_names = TopUserChartData().all_products
+    current_values = current_values or []
+    product_names = Container.get(TopUserChartData).all_products
 
     if set(product_names).issubset(current_values):
         return []
@@ -760,20 +952,59 @@ def toggle_checkboxes(n_clicks, current_values):
     Output("product_settings", "children"),
     Output("economy_settings", "children"),
     Input("setting_tabs", "value"),
+    Input("settings_modal", "is_open"),
     Input("confirm_prod", "n_clicks"),
     Input("confirm_user", "n_clicks"),
     Input("delete_data_btn", "n_clicks"),
     Input("confirm_new_stock", "n_clicks"),
+    Input("confirm_payments", "n_clicks"),
+    Input("transaction_removal_revision", "data"),
 )
 def update_settings_layout(
-    trigger, prods_trigger, user_trigger, reset_trigger, stock_trigger
+    trigger,
+    settings_open,
+    prods_trigger,
+    user_trigger,
+    reset_trigger,
+    stock_trigger,
+    payments_trigger,
+    transaction_removal_revision=None,
 ):
+    #Currently works by guessing that any db changes are done 1 sec after a callback possibly changing anything
+    #Ideally this is moved to only trigger after a callback sucessfully changes db.
+    if all(
+        action is None
+        for action in [
+            prods_trigger,
+            user_trigger,
+            reset_trigger,
+            stock_trigger,
+            payments_trigger,
+            transaction_removal_revision,
+            settings_open,
+        ]
+    ):
+        return no_update, no_update, no_update
     time.sleep(1)
     return (
         user_settings_layout(),
         product_settings_layout(),
         transaction_settings_layout(),
     )
+
+
+@callback(
+    Output("documentation_modal", "is_open"),
+    Input("open_documentation", "n_clicks"),
+    Input("password_modal", "is_open"),
+    prevent_initial_call=True,
+)
+def toggle_documentation(open_clicks, password_open):
+    if not password_open:
+        return False
+    if ctx.triggered_id == "open_documentation" and open_clicks:
+        return True
+    return no_update
 
 
 @callback(

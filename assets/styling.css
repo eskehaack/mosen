@@ -46,8 +46,44 @@ h1 {
     border-radius: 5px;
 }
 
+#remove_transaction_btn:not(:disabled) {
+    color: white;
+    background-color: #dc3545;
+    border-color: #dc3545;
+    opacity: 1;
+}
+
+#remove_transaction_btn:not(:disabled):hover,
+#remove_transaction_btn:not(:disabled):focus {
+    color: white;
+    background-color: #bb2d3b;
+    border-color: #b02a37;
+}
+
+#remove_transaction_btn:disabled {
+    color: #dc3545;
+    background-color: transparent;
+    border-color: #dc3545;
+    opacity: 0.4;
+}
+
 .barcode-input {
     width: 83vw;
+}
+
+.documentation-qr {
+    display: block;
+    width: 246px;
+    max-width: 100%;
+    height: auto;
+    margin: 8px auto 20px;
+}
+
+.documentation-address {
+    color: #ced4da;
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+    user-select: text;
 }
 
 .show_box hr {
@@ -62,4 +98,11 @@ h1 {
 hr {
     color: white;
     border-top: 2px solid gray;
+}
+.wide-tooltip .tooltip-inner {
+    max-width: 520px;
+    white-space: pre-line;
+    text-align: left;
+    padding: 12px 14px;
+    line-height: 1.45;
 }

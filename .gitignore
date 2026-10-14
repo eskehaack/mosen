@@ -155,3 +155,5 @@ src/tables/__pycache__/prod_table.cpython-38.pyc
 
 data/
 *.db
+*_barcodes.pdf
+swamp_logs/

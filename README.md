@@ -1,5 +1,7 @@
-# The Swamp Machine 4.0
+# The Swamp Machine 5.0.0
 Previously known as "Mosemaskinen". A program written in java, which was unfortunanly lost to the beyond. Thus a new child was born.
+
+The [documentation](https://thomashelboepoulsen.dk/mosen/docs) is available through the **Documentation** button in the admin login dialog, before entering a password. Scan the QR code with your phone to read the guide while the app keeps running. The QR code is a bundled image and works offline; reading the website requires internet.
 
 ## Developping Setup
 To develop this app you need to first create an environment. As I wont assume you know how, I've made a quick guide below.

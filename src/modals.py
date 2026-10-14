@@ -1,10 +1,12 @@
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 import pandas as pd
-from src.data_connection import get_prods, get_trans, get_users
+from src.database.data_connection import get_prods, get_trans, get_users
 from src.components import get_table
+from src.version import APP_VERSION
 
 USER_COLS = ["rank", "team"]
+DOCUMENTATION_URL = "https://thomashelboepoulsen.dk/mosen/docs"
 
 user_body = [
     dbc.Input(
@@ -27,6 +29,31 @@ for col in USER_COLS:
         )
     )
     user_body.append(html.Hr())
+
+user_body.append(
+    dbc.Checklist(
+        id={"type": "user_input", "index": "inp_is_guest_user"},
+        options=[{"label": " Guest", "value": 1}],
+        value=[],
+        inline=True,
+    )
+)
+user_body.append(html.Hr())
+user_body.append(
+    dbc.InputGroup(
+        [
+            dbc.InputGroupText("Early payment (DKK)"),
+            dbc.Input(
+                placeholder="0.00",
+                id={"type": "user_input", "index": "inp_paid_user"},
+                type="number",
+                min=0,
+                value=0,
+            ),
+        ]
+    )
+)
+user_body.append(html.Hr())
 
 
 def new_user_modal():
@@ -54,7 +81,7 @@ def new_user_modal():
     return mdl
 
 
-PROD_COLS = ["price", "category", "current_stock", "initial_stock"]
+PROD_COLS = ["price", "category", "initial_stock"]
 
 prod_body = [
     dbc.Input(
@@ -72,8 +99,7 @@ prod_body = [
 for col in PROD_COLS:
     prod_body.append(
         dbc.Input(
-            placeholder=col.replace("_", " ").title()
-            + ("(typically same as Initial Stock)" if col == "current_stock" else ""),
+            placeholder=col.replace("_", " ").title(),
             id={"type": "prod_input", "index": f"inp_{col}_prod"},
             type="text" if col == "category" else "number",
         )
@@ -151,7 +177,7 @@ def update_stock_modal():
                     [
                         dbc.Col(
                             html.P(
-                                "Updating stock will apply possible waste to all users."
+                                "Updating stock recalculates waste using the selected allocation strategy."
                             )
                         ),
                         dbc.Col(dbc.Button("Confirm", id="confirm_new_stock")),
@@ -178,7 +204,15 @@ def password_modal():
                 )
             ),
             dbc.ModalFooter(
-                dbc.Row([dbc.Col(dbc.Button("Confirm", id="confirm_password"))])
+                [
+                    dbc.Button(
+                        "Documentation",
+                        id="open_documentation",
+                        color="secondary",
+                        className="me-auto",
+                    ),
+                    dbc.Button("Confirm", id="confirm_password"),
+                ]
             ),
         ],
         size="md",
@@ -187,54 +221,56 @@ def password_modal():
     return mdl
 
 
+def documentation_modal():
+    return dbc.Modal(
+        [
+            dbc.ModalHeader(dbc.ModalTitle("Documentation")),
+            dbc.ModalBody(
+                [
+                    html.Img(
+                        src="assets/documentation-qr.png",
+                        alt="QR code for the Mosen documentation",
+                        className="documentation-qr",
+                    ),
+                    html.P("Scan with your phone for the setup and admin guide.", className="mb-2"),
+                    html.Div(DOCUMENTATION_URL, className="documentation-address"),
+                    html.P(
+                        f"App version: {APP_VERSION}",
+                        id="documentation_app_version",
+                        className="mt-3 mb-0 text-muted",
+                    ),
+                ],
+                className="text-center",
+            ),
+        ],
+        id="documentation_modal",
+        is_open=False,
+        centered=True,
+        size="md",
+    )
+
+
 def export_payments_modal():
     mdl = dbc.Modal(
         [
             dbc.ModalHeader("Export Payments"),
             dbc.ModalBody(
                 [
-                    dbc.Col(
+                    html.P(
+                        "Export payments after the final stock update. Exporting recalculates and saves waste using the selected allocation strategy."
+                    ),
+                    html.Hr(),
+                    dbc.Row(
                         [
-                            dbc.Row(
-                                [
-                                    dbc.Col(html.P("Add income: "), width=8),
-                                    dbc.Col(
-                                        dbc.Input(
-                                            id="added_amount_inp",
-                                            value=0,
-                                            min=0,
-                                            type="number",
-                                        ),
-                                        width=4,
-                                    ),
-                                ]
-                            ),
-                            html.Hr(),
-                            dbc.Row(
-                                [
-                                    dbc.Col(html.P("Round"), width=2),
-                                    dbc.Col(
-                                        dcc.Dropdown(
-                                            ["Up", "Down", "Nearest"],
-                                            value="Up",
-                                            clearable=False,
-                                            multi=False,
-                                            id="up_down_dd",
-                                        ),
-                                        width=3,
-                                    ),
-                                    dbc.Col(html.P("to nearest: "), width=3),
-                                    dbc.Col(
-                                        dcc.Dropdown(
-                                            [0, 1, 2, 5, 10],
-                                            value=0,
-                                            clearable=False,
-                                            multi=False,
-                                            id="round_dd",
-                                        ),
-                                        width=4,
-                                    ),
-                                ]
+                            dbc.Col(html.P("Add income: "), width=8),
+                            dbc.Col(
+                                dbc.Input(
+                                    id="added_amount_inp",
+                                    value=0,
+                                    min=0,
+                                    type="number",
+                                ),
+                                width=4,
                             ),
                         ]
                     ),
@@ -250,30 +286,39 @@ def export_payments_modal():
     return mdl
 
 
-def export_barcodes_mdl():
-    mdl = dbc.Modal(
+def remove_transaction_modal():
+    return dbc.Modal(
         [
-            dbc.ModalHeader("Export Barcodes"),
-            dbc.ModalBody(
-                [
-                    html.P("Number of guest barcodes:"),
-                    dbc.Input(id="guest_barcodes_inp", type="number", value=10),
-                ]
+            dbc.ModalHeader("Remove transaction?"),
+            dbc.ModalBody(id="remove_transaction_summary"),
+            dbc.ModalFooter(
+                html.Div(
+                    [
+                        dbc.Button(
+                            "Remove transaction",
+                            id="confirm_remove_transaction",
+                            color="danger",
+                        ),
+                        dbc.Button(
+                            "Cancel",
+                            id="cancel_remove_transaction",
+                            className="ms-2",
+                        ),
+                    ],
+                    className="d-flex justify-content-end w-100",
+                )
             ),
-            dbc.ModalFooter(dbc.Button("Confirm", id="confirm_export_barcodes")),
-            dcc.Store(id="pdf_download"),
         ],
-        size="md",
-        id="export_barcodes_modal",
+        id="remove_transaction_modal",
+        is_open=False,
     )
-    return mdl
 
 
 def bad_rows_mdl():
     tables = ["users", "prods", "transactions"]
     table_defs = [
         html.P(
-            "The following bad rows were detected in your upload. You can edit them manually, and reupload the file, if the below data is not what you wanted."
+            "Upload aborted. The following bad rows were detected in your upload. You can edit them manually, and reupload"
         )
     ]
     for table in tables:
@@ -310,12 +355,17 @@ def edit_modal():
                 ]
             ),
             dbc.ModalFooter(
-                dbc.Row(
+                html.Div(
                     [
-                        # dbc.Col(width=6),
-                        dbc.Col(dbc.Button("Delete", id="edit_modal_delete")),
-                        dbc.Col(dbc.Button("Edit", id="edit_modal_edit")),
-                    ]
+                        dbc.Button("Edit", id="edit_modal_edit"),
+                        dbc.Button(
+                            "Delete",
+                            id="edit_modal_delete",
+                            color="danger",
+                            outline=True,
+                        ),
+                    ],
+                    className="d-flex justify-content-between w-100",
                 )
             ),
         ],
